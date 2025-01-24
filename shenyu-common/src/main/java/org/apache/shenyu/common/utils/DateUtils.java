@@ -17,6 +17,8 @@
 
 package org.apache.shenyu.common.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -26,12 +28,17 @@ import java.time.temporal.ChronoUnit;
 /**
  * DateUtils.
  */
-public class DateUtils {
+public final class DateUtils {
+    
+    public static final String DATE_FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
 
-    private static final String DATE_FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+    public static final String DATE_FORMAT_DATETIME_MILLISECOND = "yyyy-MM-dd HH:mm:ss.SSS";
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT_DATETIME);
-
+    
+    private DateUtils() {
+    }
+    
     /**
      * parse LocalDateTime.
      * out put format: yyyy-MM-dd HH:mm:ss
@@ -54,19 +61,19 @@ public class DateUtils {
     public static LocalDateTime parseLocalDateTime(final String dataTime, final String dateTimeFormatter) {
         return LocalDateTime.parse(dataTime, DateTimeFormatter.ofPattern(dateTimeFormatter));
     }
-
+    
     /**
      * acquireMinutesBetween.
      *
      * @param start this is start date.
      * @param end   this is start date.
      * @return The number of days between start and end, if end is after start,
-     *         returns a positive number, otherwise returns a negative number.
+     *     returns a positive number, otherwise returns a negative number.
      */
     public static long acquireMinutesBetween(final LocalDateTime start, final LocalDateTime end) {
         return start.until(end, ChronoUnit.MINUTES);
     }
-
+    
     /**
      * Acquire millis between long.
      *
@@ -77,7 +84,7 @@ public class DateUtils {
     public static long acquireMillisBetween(final LocalDateTime start, final LocalDateTime end) {
         return start.until(end, ChronoUnit.MILLIS);
     }
-
+    
     /**
      * Format local date time from timestamp local date time.
      *
@@ -87,7 +94,7 @@ public class DateUtils {
     public static LocalDateTime formatLocalDateTimeFromTimestamp(final Long timestamp) {
         return LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.ofHours(8));
     }
-
+    
     /**
      * Format local date time from timestamp by system time zone.
      *
@@ -97,7 +104,7 @@ public class DateUtils {
     public static LocalDateTime formatLocalDateTimeFromTimestampBySystemTimezone(final Long timestamp) {
         return LocalDateTime.ofEpochSecond(timestamp / 1000, 0, OffsetDateTime.now().getOffset());
     }
-
+    
     /**
      * Format local date time to string.
      * use default pattern yyyy-MM-dd HH:mm:ss
@@ -108,7 +115,7 @@ public class DateUtils {
     public static String localDateTimeToString(final LocalDateTime localDateTime) {
         return DATE_TIME_FORMATTER.format(localDateTime);
     }
-
+    
     /**
      * Format local date time to string.
      *
@@ -120,4 +127,15 @@ public class DateUtils {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
         return localDateTime.format(formatter);
     }
+
+    /**
+     * isValidDate.
+     *
+     * @param dateStr dateStr
+     * @return boolean
+     */
+    public static boolean isValidDate(final String dateStr) {
+        return StringUtils.isNotBlank(dateStr);
+    }
+
 }

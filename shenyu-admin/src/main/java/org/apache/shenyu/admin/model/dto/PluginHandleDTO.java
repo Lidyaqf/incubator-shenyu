@@ -20,7 +20,8 @@ package org.apache.shenyu.admin.model.dto;
 import org.apache.shenyu.admin.mapper.PluginHandleMapper;
 import org.apache.shenyu.admin.validation.annotation.Existed;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -40,13 +41,13 @@ public class PluginHandleDTO implements Serializable {
     /**
      * plugin id.
      */
-    @NotNull
+    @NotBlank
     private String pluginId;
     
     /**
-     * the attribute name.
+     * the field name.
      */
-    @NotNull
+    @NotBlank
     private String field;
     
     /**
@@ -64,15 +65,17 @@ public class PluginHandleDTO implements Serializable {
     private Integer dataType;
     
     /**
-     * the attribute type.
+     * the field type.
      * 1  selector,
      * 2  rule.
      */
+    @NotNull
     private Integer type;
     
     /**
      * the attribute sort.
      */
+    @NotNull
     private Integer sort;
     
     /**

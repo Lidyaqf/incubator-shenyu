@@ -17,6 +17,7 @@
 
 package org.apache.shenyu.admin.model.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.shenyu.admin.model.page.condition.BaseExcludedSearchCondition;
 import org.apache.shenyu.admin.model.page.condition.SearchCondition;
 import org.apache.shenyu.admin.model.page.condition.SwitchCondition;
@@ -42,6 +43,36 @@ public class SelectorQueryCondition extends BaseExcludedSearchCondition implemen
      * selector from plugin.
      */
     private List<String> plugin;
+
+    /**
+     * namespace id.
+     */
+    private String namespaceId;
+    
+    /**
+     * user id.
+     */
+    @JsonIgnore
+    private String userId;
+    
+    /**
+     * Gets the value of userId.
+     *
+     * @return the value of userId
+     */
+    public String getUserId() {
+        return userId;
+    }
+    
+    /**
+     * Sets the userId.
+     *
+     * @param userId userId
+     */
+    public void setUserId(final String userId) {
+        this.userId = userId;
+    }
+    
     
     /**
      * get switchStatus.
@@ -99,4 +130,23 @@ public class SelectorQueryCondition extends BaseExcludedSearchCondition implemen
     public void setPlugin(final List<String> plugin) {
         this.plugin = plugin;
     }
+
+    /**
+     * Gets the value of name.
+     *
+     * @return the value of name
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    /**
+     * Sets the namespaceId.
+     *
+     * @param namespaceId namespaceId
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
+
 }

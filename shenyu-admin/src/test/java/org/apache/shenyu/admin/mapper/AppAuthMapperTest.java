@@ -25,10 +25,11 @@ import org.apache.shenyu.common.utils.UUIDUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.sql.Timestamp;
 import java.util.List;
 
+import static org.apache.shenyu.common.constant.Constants.SYS_DEFAULT_NAMESPACE_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,6 +67,7 @@ public final class AppAuthMapperTest extends AbstractSpringIntegrationTest {
     @Test
     public void testByQuery() {
         AppAuthQuery appAuthQuery = new AppAuthQuery();
+        appAuthQuery.setNamespaceId(SYS_DEFAULT_NAMESPACE_ID);
         List<AppAuthDO> appAuthDOsWithQuery = appAuthMapper.selectByQuery(appAuthQuery);
         assertThat(appAuthDOsWithQuery.size(), greaterThan(0));
 
@@ -90,6 +92,7 @@ public final class AppAuthMapperTest extends AbstractSpringIntegrationTest {
         AppAuthQuery appAuthQuery = new AppAuthQuery();
         appAuthQuery.setPhone(appAuthDO.getPhone());
         appAuthQuery.setAppKey(appAuthDO.getAppKey());
+        appAuthQuery.setNamespaceId(SYS_DEFAULT_NAMESPACE_ID);
         int count = appAuthMapper.countByQuery(appAuthQuery);
         assertEquals(1, count);
     }
@@ -113,7 +116,7 @@ public final class AppAuthMapperTest extends AbstractSpringIntegrationTest {
 
     @Test
     public void testUpdateAppSecretByAppKey() {
-        String appSecret = SignUtils.getInstance().generateKey();
+        String appSecret = SignUtils.generateKey();
         appAuthDO.setAppSecret(appSecret);
         int count = appAuthMapper.updateAppSecretByAppKey(appAuthDO.getAppKey(), appSecret);
         assertEquals(1, count);
@@ -138,13 +141,14 @@ public final class AppAuthMapperTest extends AbstractSpringIntegrationTest {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         return AppAuthDO.builder()
                 .id(UUIDUtils.getInstance().generateShortUuid())
-                .appKey(SignUtils.getInstance().generateKey())
-                .appSecret(SignUtils.getInstance().generateKey())
+                .appKey(SignUtils.generateKey())
+                .appSecret(SignUtils.generateKey())
                 .extInfo("{\"extInfo\":\"json\"}")
                 .open(true)
                 .enabled(false)
                 .phone("18800000000")
                 .userId(UUIDUtils.getInstance().generateShortUuid())
+                .namespaceId(SYS_DEFAULT_NAMESPACE_ID)
                 .dateCreated(now)
                 .dateUpdated(now)
                 .build();

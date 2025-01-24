@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.DashboardUserDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class UserChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code UserChangedEvent}.operator is unknown.
      *
-     * @param source Current user state
-     * @param before Before the change user state
-     * @param type   event type
+     * @param source   Current user state
+     * @param before   Before the change user state
+     * @param type     event type
+     * @param operator operator
      */
     public UserChangedEvent(final DashboardUserDO source, final DashboardUserDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -81,12 +83,12 @@ public class UserChangedEvent extends AdminDataModelChangedEvent {
         if (!Objects.equals(before.getEnabled(), after.getEnabled())) {
             builder.append(String.format("enable[%s => %s] ", before.getEnabled(), after.getEnabled()));
         }
-
+        
         return builder.toString();
     }
     
     @Override
     public String eventName() {
-        return "user";
+        return Constants.EVENT_NAME_USER;
     }
 }

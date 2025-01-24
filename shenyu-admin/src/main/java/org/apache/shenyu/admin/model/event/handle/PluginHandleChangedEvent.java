@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.PluginHandleDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class PluginHandleChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code PluginChangedEvent}.operator is unknown.
      *
-     * @param source Current plugin state
-     * @param before Before the change plugiin state
-     * @param type   event type
+     * @param source   Current plugin state
+     * @param before   Before the change plugin state
+     * @param type     event type
+     * @param operator operator
      */
     public PluginHandleChangedEvent(final PluginHandleDO source, final PluginHandleDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -69,7 +71,7 @@ public class PluginHandleChangedEvent extends AdminDataModelChangedEvent {
             builder.append(String.format("type[%s => %s] ", before.getType(), after.getType()));
         }
         if (!Objects.equals(before.getDataType(), after.getDataType())) {
-            builder.append(String.format("dataType[%s => %s] ", before.getDateCreated(), after.getDataType()));
+            builder.append(String.format("dataType[%s => %s] ", before.getDataType(), after.getDataType()));
         }
         if (!Objects.equals(before.getSort(), after.getSort())) {
             builder.append(String.format("sort[%s => %s] ", before.getSort(), after.getSort()));
@@ -79,6 +81,6 @@ public class PluginHandleChangedEvent extends AdminDataModelChangedEvent {
     
     @Override
     public String eventName() {
-        return "plugin-handle";
+        return Constants.EVENT_NAME_PLUGIN_HANDLE;
     }
 }

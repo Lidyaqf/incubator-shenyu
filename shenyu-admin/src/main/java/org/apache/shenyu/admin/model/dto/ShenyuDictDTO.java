@@ -20,7 +20,8 @@ package org.apache.shenyu.admin.model.dto;
 import org.apache.shenyu.admin.mapper.ShenyuDictMapper;
 import org.apache.shenyu.admin.validation.annotation.Existed;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -40,25 +41,25 @@ public class ShenyuDictDTO implements Serializable {
     /**
      * dict type.
      */
-    @NotNull
+    @NotBlank
     private String type;
     
     /**
      * dict code.
      */
-    @NotNull
+    @NotBlank
     private String dictCode;
     
     /**
      * dict name.
      */
-    @NotNull
+    @NotBlank
     private String dictName;
     
     /**
      * dict value.
      */
-    @NotNull
+    @NotBlank
     private String dictValue;
     
     /**
@@ -75,16 +76,16 @@ public class ShenyuDictDTO implements Serializable {
     /**
      * whether enabled.
      */
-    private Boolean enabled;
+    private Boolean enabled = true;
     
     public ShenyuDictDTO() {
     }
     
     public ShenyuDictDTO(final String id,
-                         @NotNull final String type,
+                         @NotBlank final String type,
                          final String dictCode,
-                         @NotNull final String dictName,
-                         @NotNull final String dictValue,
+                         @NotBlank final String dictName,
+                         @NotBlank final String dictValue,
                          final String desc,
                          @NotNull final Integer sort,
                          final Boolean enabled) {

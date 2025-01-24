@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -50,12 +51,16 @@ public final class ExtensionLoader<T> {
     private static final String SHENYU_DIRECTORY = "META-INF/shenyu/";
     
     private static final Map<Class<?>, ExtensionLoader<?>> LOADERS = new ConcurrentHashMap<>();
+
+    private static final Comparator<Holder<Object>> HOLDER_COMPARATOR = Comparator.comparing(Holder::getOrder);
+
+    private static final Comparator<ClassEntity> CLASS_ENTITY_COMPARATOR = Comparator.comparing(ClassEntity::getOrder);
     
     private final Class<T> clazz;
     
     private final ClassLoader classLoader;
     
-    private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
+    private final Holder<Map<String, ClassEntity>> cachedClasses = new Holder<>();
     
     private final Map<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     
@@ -72,7 +77,7 @@ public final class ExtensionLoader<T> {
         this.clazz = clazz;
         this.classLoader = cl;
         if (!Objects.equals(clazz, ExtensionFactory.class)) {
-            ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getExtensionClasses();
+            ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getExtensionClassesEntity();
         }
     }
     
@@ -119,7 +124,7 @@ public final class ExtensionLoader<T> {
      * @return the default join.
      */
     public T getDefaultJoin() {
-        getExtensionClasses();
+        getExtensionClassesEntity();
         if (StringUtils.isBlank(cachedDefaultName)) {
             return null;
         }
@@ -136,6 +141,13 @@ public final class ExtensionLoader<T> {
         if (StringUtils.isBlank(name)) {
             throw new NullPointerException("get join name is null");
         }
+        ClassEntity classEntity = getExtensionClassesEntity().get(name);
+        if (Objects.isNull(classEntity)) {
+            throw new IllegalArgumentException(name + " name is error");
+        }
+        if (!classEntity.isSingleton()) {
+            return (T) createExtension(classEntity);
+        }
         Holder<Object> objectHolder = cachedInstances.get(name);
         if (Objects.isNull(objectHolder)) {
             cachedInstances.putIfAbsent(name, new Holder<>());
@@ -143,11 +155,11 @@ public final class ExtensionLoader<T> {
         }
         Object value = objectHolder.getValue();
         if (Objects.isNull(value)) {
-            synchronized (cachedInstances) {
+            synchronized (objectHolder) {
                 value = objectHolder.getValue();
                 if (Objects.isNull(value)) {
-                    value = createExtension(name);
-                    objectHolder.setValue(value);
+                    createExtension(name, objectHolder);
+                    value = objectHolder.getValue();
                 }
             }
         }
@@ -160,41 +172,56 @@ public final class ExtensionLoader<T> {
      * @return list. joins
      */
     public List<T> getJoins() {
-        Map<String, Class<?>> extensionClasses = this.getExtensionClasses();
-        if (extensionClasses.isEmpty()) {
+        Map<String, ClassEntity> extensionClassesEntity = this.getExtensionClassesEntity();
+        if (extensionClassesEntity.isEmpty()) {
             return Collections.emptyList();
         }
-        if (Objects.equals(extensionClasses.size(), cachedInstances.size())) {
-            return (List<T>) this.cachedInstances.values().stream().map(e -> {
-                return e.getValue();
-            }).collect(Collectors.toList());
+        if (Objects.equals(extensionClassesEntity.size(), cachedInstances.size())) {
+            return (List<T>) this.cachedInstances.values().stream()
+                    .sorted(HOLDER_COMPARATOR)
+                    .map(e -> {
+                        return e.getValue();
+                    }).collect(Collectors.toList());
         }
         List<T> joins = new ArrayList<>();
-        extensionClasses.forEach((name, v) -> {
-            T join = this.getJoin(name);
+        List<ClassEntity> classEntities = extensionClassesEntity.values().stream()
+                .sorted(CLASS_ENTITY_COMPARATOR).collect(Collectors.toList());
+        classEntities.forEach(v -> {
+            T join = this.getJoin(v.getName());
             joins.add(join);
         });
         return joins;
     }
+
+    @SuppressWarnings("unchecked")
+    private Object createExtension(final ClassEntity classEntity) {
+        Class<?> aClass = classEntity.getClazz();
+        try {
+            return aClass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new IllegalStateException("Extension instance(name: " + classEntity.getName() + ", class: "
+                    + aClass + ")  could not be instantiated: " + e.getMessage(), e);
+
+        }
+    }
     
     @SuppressWarnings("unchecked")
-    private T createExtension(final String name) {
-        Class<?> aClass = getExtensionClasses().get(name);
-        if (Objects.isNull(aClass)) {
-            throw new IllegalArgumentException("name is error");
+    private void createExtension(final String name, final Holder<Object> holder) {
+        ClassEntity classEntity = getExtensionClassesEntity().get(name);
+        if (Objects.isNull(classEntity)) {
+            throw new IllegalArgumentException(name + " name is error");
         }
+        Class<?> aClass = classEntity.getClazz();
         Object o = joinInstances.get(aClass);
         if (Objects.isNull(o)) {
-            try {
-                joinInstances.putIfAbsent(aClass, aClass.newInstance());
+            o = createExtension(classEntity);
+            if (classEntity.isSingleton()) {
+                joinInstances.putIfAbsent(aClass, o);
                 o = joinInstances.get(aClass);
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new IllegalStateException("Extension instance(name: " + name + ", class: "
-                        + aClass + ")  could not be instantiated: " + e.getMessage(), e);
-                
             }
         }
-        return (T) o;
+        holder.setOrder(classEntity.getOrder());
+        holder.setValue(o);
     }
     
     /**
@@ -202,21 +229,27 @@ public final class ExtensionLoader<T> {
      *
      * @return the extension classes
      */
-    public Map<String, Class<?>> getExtensionClasses() {
-        Map<String, Class<?>> classes = cachedClasses.getValue();
+    public Map<String, Class<?>> getExtensionClasses1() {
+        Map<String, ClassEntity> classes = this.getExtensionClassesEntity();
+        return classes.values().stream().collect(Collectors.toMap(e -> e.getName(), x -> x.getClazz(), (a, b) -> a));
+    }
+    
+    private Map<String, ClassEntity> getExtensionClassesEntity() {
+        Map<String, ClassEntity> classes = cachedClasses.getValue();
         if (Objects.isNull(classes)) {
             synchronized (cachedClasses) {
                 classes = cachedClasses.getValue();
                 if (Objects.isNull(classes)) {
                     classes = loadExtensionClass();
                     cachedClasses.setValue(classes);
+                    cachedClasses.setOrder(0);
                 }
             }
         }
         return classes;
     }
     
-    private Map<String, Class<?>> loadExtensionClass() {
+    private Map<String, ClassEntity> loadExtensionClass() {
         SPI annotation = clazz.getAnnotation(SPI.class);
         if (Objects.nonNull(annotation)) {
             String value = annotation.value();
@@ -224,7 +257,7 @@ public final class ExtensionLoader<T> {
                 cachedDefaultName = value;
             }
         }
-        Map<String, Class<?>> classes = new HashMap<>(16);
+        Map<String, ClassEntity> classes = new HashMap<>(16);
         loadDirectory(classes);
         return classes;
     }
@@ -232,7 +265,7 @@ public final class ExtensionLoader<T> {
     /**
      * Load files under SHENYU_DIRECTORY.
      */
-    private void loadDirectory(final Map<String, Class<?>> classes) {
+    private void loadDirectory(final Map<String, ClassEntity> classes) {
         String fileName = SHENYU_DIRECTORY + clazz.getName();
         try {
             Enumeration<URL> urls = Objects.nonNull(this.classLoader) ? classLoader.getResources(fileName)
@@ -248,7 +281,7 @@ public final class ExtensionLoader<T> {
         }
     }
     
-    private void loadResources(final Map<String, Class<?>> classes, final URL url) throws IOException {
+    private void loadResources(final Map<String, ClassEntity> classes, final URL url) throws IOException {
         try (InputStream inputStream = url.openStream()) {
             Properties properties = new Properties();
             properties.load(inputStream);
@@ -268,7 +301,7 @@ public final class ExtensionLoader<T> {
         }
     }
     
-    private void loadClass(final Map<String, Class<?>> classes,
+    private void loadClass(final Map<String, ClassEntity> classes,
                            final String name, final String classPath) throws ClassNotFoundException {
         Class<?> subClass = Objects.nonNull(this.classLoader) ? Class.forName(classPath, true, this.classLoader) : Class.forName(classPath);
         if (!clazz.isAssignableFrom(subClass)) {
@@ -277,11 +310,14 @@ public final class ExtensionLoader<T> {
         if (!subClass.isAnnotationPresent(Join.class)) {
             throw new IllegalStateException("load extension resources error," + subClass + " without @" + Join.class + " annotation");
         }
-        Class<?> oldClass = classes.get(name);
-        if (Objects.isNull(oldClass)) {
-            classes.put(name, subClass);
-        } else if (!Objects.equals(oldClass, subClass)) {
-            throw new IllegalStateException("load extension resources error,Duplicate class " + clazz.getName() + " name " + name + " on " + oldClass.getName() + " or " + subClass.getName());
+        ClassEntity oldClassEntity = classes.get(name);
+        if (Objects.isNull(oldClassEntity)) {
+            Join joinAnnotation = subClass.getAnnotation(Join.class);
+            ClassEntity classEntity = new ClassEntity(name, joinAnnotation.order(), subClass, joinAnnotation.isSingleton());
+            classes.put(name, classEntity);
+        } else if (!Objects.equals(oldClassEntity.getClazz(), subClass)) {
+            throw new IllegalStateException("load extension resources error,Duplicate class " + clazz.getName() + " name "
+                    + name + " on " + oldClassEntity.getClazz().getName() + " or " + subClass.getName());
         }
     }
     
@@ -290,10 +326,12 @@ public final class ExtensionLoader<T> {
      *
      * @param <T> the type parameter.
      */
-    public static class Holder<T> {
+    private static final class Holder<T> {
         
         private volatile T value;
         
+        private Integer order;
+
         /**
          * Gets value.
          *
@@ -310,6 +348,98 @@ public final class ExtensionLoader<T> {
          */
         public void setValue(final T value) {
             this.value = value;
+        }
+        
+        /**
+         * set order.
+         *
+         * @param order order.
+         */
+        public void setOrder(final Integer order) {
+            this.order = order;
+        }
+        
+        /**
+         * get order.
+         *
+         * @return order.
+         */
+        public Integer getOrder() {
+            return order;
+        }
+    }
+    
+    private static final class ClassEntity {
+        
+        /**
+         * name.
+         */
+        private String name;
+        
+        /**
+         * order.
+         */
+        private Integer order;
+        
+        private Boolean isSingleton;
+        
+        /**
+         * class.
+         */
+        private Class<?> clazz;
+        
+        private ClassEntity(final String name, final Integer order, final Class<?> clazz, final boolean isSingleton) {
+            this.name = name;
+            this.order = order;
+            this.clazz = clazz;
+            this.isSingleton = isSingleton;
+        }
+        
+        /**
+         * get class.
+         *
+         * @return class.
+         */
+        public Class<?> getClazz() {
+            return clazz;
+        }
+        
+        /**
+         * set class.
+         *
+         * @param clazz class.
+         */
+        public void setClazz(final Class<?> clazz) {
+            this.clazz = clazz;
+        }
+        
+        /**
+         * get name.
+         *
+         * @return name.
+         */
+        public String getName() {
+            return name;
+        }
+        
+        /**
+         * get order.
+         *
+         * @return order.
+         * @see Join#order()
+         */
+        public Integer getOrder() {
+            return order;
+        }
+        
+        /**
+         * Obtaining this class requires creating a singleton object, or multiple instances.
+         *
+         * @return true or false.
+         * @see Join#isSingleton()
+         */
+        public Boolean isSingleton() {
+            return isSingleton;
         }
     }
 }

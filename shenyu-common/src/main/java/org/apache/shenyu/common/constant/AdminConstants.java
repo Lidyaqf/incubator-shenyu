@@ -33,6 +33,11 @@ public final class AdminConstants {
     public static final String PLUGIN_NAME_IS_EXIST = "The plugin name already exists and can't be added repeatedly!";
 
     /**
+     * The constant RESOURCE_NAME_IS_EXIST.
+     */
+    public static final String RESOURCE_NAME_IS_EXIST = "The resource name already exists and can't be added repeatedly!";
+
+    /**
      * The constant ID_NOT_EXIST.
      */
     public static final String ID_NOT_EXIST = "ID NOT EXIST!";
@@ -51,6 +56,36 @@ public final class AdminConstants {
      * The constant SYS_PLUGIN_ID_NOT_EXIST.
      */
     public static final String SYS_PLUGIN_ID_NOT_EXIST = "The plugin(s) does not exist！";
+
+    /**
+     * The constant NAMESPACE_PLUGIN_EXIST.
+     */
+    public static final String NAMESPACE_PLUGIN_EXIST = "The plugin of namespace is exist！";
+
+    /**
+     * The constant NAMESPACE_USER_EXIST.
+     */
+    public static final String NAMESPACE_USER_EXIST = "The user namespace rel is exist！";
+
+    /**
+     * The constant SYS_NAMESPACE_ID_NOT_EXIST.
+     */
+    public static final String SYS_NAMESPACE_ID_NOT_EXIST = "The namespace(s) does not exist！";
+
+    /**
+     * The constant NAMESPACE_PLUGIN_NOT_DELETE.
+     */
+    public static final String NAMESPACE_PLUGIN_NOT_DELETE = "The plugin that exists under a certain namespace cannot be deleted.";
+
+    /**
+     * The constant SYS_DEFAULT_NAMESPACE_ID_DELETE.
+     */
+    public static final String SYS_DEFAULT_NAMESPACE_ID_DELETE = "The default namespace cannot delete！";
+
+    /**
+     * The constant SYS_API_ID_NOT_EXIST.
+     */
+    public static final String SYS_API_ID_NOT_EXIST = "The api(s) does not exist！";
 
     /**
      * The constant DATA_PATH_IS_EXIST.
@@ -226,4 +261,48 @@ public final class AdminConstants {
      * The constant URI_SUFFIX.
      */
     public static final String URI_SUFFIX = "/**";
+
+    /**
+     * The constant URI_SLASH_SUFFIX.
+     */
+    public static final String URI_SLASH_SUFFIX = "/";
+
+    /**
+     * The constant URI_VARIABLE_SUFFIX.
+     */
+    public static final String URI_VARIABLE_SUFFIX = "{";
+
+    /**
+     * the constant api document global flag dict code.
+     */
+    public static final String DICT_API_DOC_FLAG_DICTCODE = "API_DOC_GLOBAL_FLAG";
+
+    /**
+     * the constant api document global flag dict name.
+     */
+    public static final String DICT_API_DOC_FLAG_DICTNAME = "status";
+
+    /**
+     * the constant api document environment dict name.
+     */
+    public static final String DICT_TYPE_API_DOC_ENV = "apidocEnv";
+
+    public static final String TAG_ROOT_PARENT_ID = "0";
+
+    public static final String THE_PLUGIN_JAR_FILE_IS_NOT_CORRECT_OR_EXCEEDS_16_MB = "The plugin JAR file is not correct or exceeds 16MB!";
+
+    public static final String PLUGIN_INTERFACE_PATH = "org.apache.shenyu.plugin.api.ShenyuPlugin";
+
+    public static final String PLUGIN_ABSTRACT_PATH = "org.apache.shenyu.plugin.base.AbstractShenyuPlugin";
+
+    public static final String PROXY_SELECTOR_NAME_IS_EXIST = "The proxy selector name already exists and can't be added repeatedly!";
+
+    public static final String PROXY_SELECTOR_ID_IS_NOT_EXIST = "The proxy selector(s) does not exist";
+
+    public static final long THE_ONE_DAY_MILLIS_TIME = 24 * 60 * 60 * 1000L;
+
+    public static final long FIVE_SECONDS_MILLIS_TIME = 5 * 1000L;
+
+    public static final long TEN_SECONDS_MILLIS_TIME = 10 * 1000L;
 }
+

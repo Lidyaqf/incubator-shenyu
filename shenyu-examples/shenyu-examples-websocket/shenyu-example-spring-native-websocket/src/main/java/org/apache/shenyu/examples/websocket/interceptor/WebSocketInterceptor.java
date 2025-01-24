@@ -17,15 +17,17 @@
 
 package org.apache.shenyu.examples.websocket.interceptor;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,41 +36,48 @@ import java.util.Map;
 @Component
 public class WebSocketInterceptor implements HandshakeInterceptor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketInterceptor.class);
+
     /**
      * Before handshake.
-     *
-     * @param request
-     * @param response
-     * @param wsHandler
-     * @param attributes
-     * @return
-     * @throws Exception
+     * @param request request
+     * @param response response
+     * @param wsHandler websocketHandler
+     * @param attributes  attributes
+     * @return enable handshake
+     * @throws Exception exception
      */
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        System.out.println("Shake hands.");
-        HashMap<String, String> paramMap = HttpUtil.decodeParamMap(request.getURI().getQuery(), "utf-8");
+    public boolean beforeHandshake(final ServerHttpRequest request, 
+                                   final ServerHttpResponse response, 
+                                   final WebSocketHandler wsHandler, 
+                                   final Map<String, Object> attributes) throws Exception {
+        LOG.info("Shake hands.");
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(request.getURI().toString()).build();
+        Map<String, String> paramMap = uriComponents.getQueryParams().toSingleValueMap();
         String uid = paramMap.get("token");
-        if (StrUtil.isNotBlank(uid)) {
+        if (StringUtils.isNotBlank(uid)) {
             attributes.put("token", uid);
-            System.out.println("user token " + uid + " shook hands successfully！");
+            LOG.info("user token {} shook hands successfully！", uid);
             return true;
         }
-        System.out.println("user login has expired");
+        LOG.info("user login has expired");
         return false;
     }
 
     /**
      * After shaking hands.
-     *
-     * @param request
-     * @param response
-     * @param wsHandler
-     * @param exception
+     * @param request  request
+     * @param response  response
+     * @param wsHandler  websocketHandler
+     * @param exception  exception
      */
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
-        System.out.println("Handshake complete");
+    public void afterHandshake(final ServerHttpRequest request, 
+                               final ServerHttpResponse response, 
+                               final WebSocketHandler wsHandler, 
+                               final Exception exception) {
+        LOG.info("Handshake complete");
     }
 
 }

@@ -18,9 +18,12 @@
 package org.apache.shenyu.admin.model.dto;
 
 import org.apache.shenyu.admin.mapper.AppAuthMapper;
+import org.apache.shenyu.admin.mapper.NamespaceMapper;
 import org.apache.shenyu.admin.validation.annotation.Existed;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -35,24 +38,25 @@ public class AppAuthDTO implements Serializable {
     /**
      * primary key.
      */
-    @NotNull(message = "app auth id not null")
+    @NotBlank(message = "app auth id not null")
     @Existed(message = "app auth is not existed", provider = AppAuthMapper.class)
     private String id;
     
     /**
      * application key.
      */
-    @NotNull(message = "app auth appKey not null")
+    @NotBlank(message = "app auth appKey not null")
     private String appKey;
     
     /**
      * encryption secret.
      */
-    @NotNull(message = "app auth appSecret not null")
+    @NotBlank(message = "app auth appSecret not null")
     private String appSecret;
     
     private String userId;
-    
+
+    @Pattern(regexp = "\\+?\\d{7,11}", message = "number is illegal, length 7 to 11! e.g. +1234567 or 1234567")
     private String phone;
     
     private String extInfo;
@@ -66,10 +70,19 @@ public class AppAuthDTO implements Serializable {
      * whether enabled.
      */
     private Boolean enabled;
-    
-    private List<AuthParamDTO> authParamDTOList;
-    
-    private List<AuthPathDTO> authPathDTOList;
+
+    @Valid
+    private List<AuthParamDTO> authParamList;
+
+    @Valid
+    private List<AuthPathDTO> authPathList;
+
+    /**
+     * namespaceId.
+     */
+    @NotBlank
+    @Existed(message = "namespaceId is not existed", provider = NamespaceMapper.class)
+    private String namespaceId;
     
     /**
      * Gets the value of id.
@@ -220,17 +233,17 @@ public class AppAuthDTO implements Serializable {
      *
      * @return the value of authParamDTOList
      */
-    public List<AuthParamDTO> getAuthParamDTOList() {
-        return authParamDTOList;
+    public List<AuthParamDTO> getAuthParamList() {
+        return authParamList;
     }
     
     /**
      * Sets the authParamDTOList.
      *
-     * @param authParamDTOList authParamDTOList
+     * @param authParamList authParamDTOList
      */
-    public void setAuthParamDTOList(final List<AuthParamDTO> authParamDTOList) {
-        this.authParamDTOList = authParamDTOList;
+    public void setAuthParamList(final List<AuthParamDTO> authParamList) {
+        this.authParamList = authParamList;
     }
     
     /**
@@ -238,17 +251,35 @@ public class AppAuthDTO implements Serializable {
      *
      * @return the value of authPathDTOList
      */
-    public List<AuthPathDTO> getAuthPathDTOList() {
-        return authPathDTOList;
+    public List<AuthPathDTO> getAuthPathList() {
+        return authPathList;
     }
     
     /**
      * Sets the authPathDTOList.
      *
-     * @param authPathDTOList authPathDTOList
+     * @param authPathList authPathDTOList
      */
-    public void setAuthPathDTOList(final List<AuthPathDTO> authPathDTOList) {
-        this.authPathDTOList = authPathDTOList;
+    public void setAuthPathList(final List<AuthPathDTO> authPathList) {
+        this.authPathList = authPathList;
+    }
+
+    /**
+     * get namespaceId.
+     *
+     * @return namespaceId
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    /**
+     * set namespaceId.
+     *
+     * @param namespaceId namespaceId
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
     }
     
     @Override
@@ -268,12 +299,13 @@ public class AppAuthDTO implements Serializable {
                 && Objects.equals(extInfo, that.extInfo)
                 && Objects.equals(open, that.open)
                 && Objects.equals(enabled, that.enabled)
-                && Objects.equals(authParamDTOList, that.authParamDTOList)
-                && Objects.equals(authPathDTOList, that.authPathDTOList);
+                && Objects.equals(authParamList, that.authParamList)
+                && Objects.equals(authPathList, that.authPathList)
+                && Objects.equals(namespaceId, that.namespaceId);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(id, appKey, appSecret, userId, phone, extInfo, open, enabled, authParamDTOList, authPathDTOList);
+        return Objects.hash(id, appKey, appSecret, userId, phone, extInfo, open, enabled, authParamList, authPathList, namespaceId);
     }
 }

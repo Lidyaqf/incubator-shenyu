@@ -20,13 +20,19 @@ package org.apache.shenyu.common.cache;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.shenyu.common.concurrent.MemoryLimitCalculator;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Map;
 
 /**
  * The only difference between this class and {@link org.apache.commons.collections4.map.LRUMap}
  * is that it handles memory issues via {@link org.apache.shenyu.common.concurrent.MemoryLimitCalculator}.
+ *
+ * <p>Note: this class is not thread safe! see https://github.com/apache/shenyu/issues/3929
  */
+@NotThreadSafe
 public class MemorySafeLRUMap<K, V> extends LRUMap<K, V> {
+
+    private static final long serialVersionUID = -102926983721266409L;
 
     private final int maxFreeMemory;
 

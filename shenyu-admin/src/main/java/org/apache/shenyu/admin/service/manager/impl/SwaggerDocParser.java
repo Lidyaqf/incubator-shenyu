@@ -18,6 +18,20 @@
 package org.apache.shenyu.admin.service.manager.impl;
 
 import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.shenyu.admin.model.bean.CustomCode;
+import org.apache.shenyu.admin.model.bean.DocInfo;
+import org.apache.shenyu.admin.model.bean.DocItem;
+import org.apache.shenyu.admin.model.bean.DocModule;
+import org.apache.shenyu.admin.model.bean.DocParameter;
+import org.apache.shenyu.admin.service.manager.DocParser;
+import org.apache.shenyu.common.utils.GsonUtils;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,22 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.shenyu.admin.model.bean.CustomCode;
-import org.apache.shenyu.admin.model.bean.DocInfo;
-import org.apache.shenyu.admin.model.bean.DocItem;
-import org.apache.shenyu.admin.model.bean.DocModule;
-import org.apache.shenyu.admin.model.bean.DocParameter;
-import org.apache.shenyu.admin.service.manager.DocParser;
-import org.apache.shenyu.common.utils.GsonUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.util.CollectionUtils;
 
 /**
  * Parse the JSON content of swagger.
@@ -62,13 +61,12 @@ public class SwaggerDocParser implements DocParser {
         final List<DocItem> docItems = new ArrayList<>();
 
         JsonObject paths = docRoot.getAsJsonObject("paths");
-        if (paths == null) {
+        if (Objects.isNull(paths)) {
             paths = new JsonObject();
         }
         Set<String> pathNameSet = paths.keySet();
         for (String apiPath : pathNameSet) {
             JsonObject pathInfo = paths.getAsJsonObject(apiPath);
-            // key: get,post,head...
             Collection<String> httpMethodList = getHttpMethods(pathInfo);
             Optional<String> first = httpMethodList.stream().findFirst();
             if (first.isPresent()) {
@@ -122,18 +120,8 @@ public class SwaggerDocParser implements DocParser {
     }
 
     protected Collection<String> getHttpMethods(final JsonObject pathInfo) {
-        // key: get,post,head...
-        List<String> retList;
         Set<String> httpMethodList = pathInfo.keySet();
-        if (httpMethodList.size() <= 2) {
-            retList = new ArrayList<>(httpMethodList);
-        } else {
-//            Set<String> ignoreHttpMethods = DocParserContext.ignoreHttpMethods;
-//            retList = httpMethodList.stream()
-//                    .filter(method -> !ignoreHttpMethods.contains(method.toLowerCase()))
-//                    .collect(Collectors.toList());
-            retList = new ArrayList<>(httpMethodList);
-        }
+        List<String> retList = new ArrayList<>(httpMethodList);
         Collections.sort(retList);
         return retList;
     }
@@ -144,41 +132,52 @@ public class SwaggerDocParser implements DocParser {
         apiName = basePath + apiName;
 
         DocItem docItem = new DocItem();
-        docItem.setId(UUID.randomUUID().toString());
         docItem.setName(apiName);
-        docItem.setSummary(docInfo.get("summary").getAsString());
-        docItem.setDescription(docInfo.get("description").getAsString());
-        docItem.setProduces(GsonUtils.getGson().fromJson(docInfo.getAsJsonArray("produces"), new TypeToken<List<String>>() { }.getType()));
-        docItem.setMultiple(docInfo.get("multiple").getAsString() != null);
-        String apiResponseStr = docInfo.get("apiResponse").getAsString();
-        if (apiResponseStr != null) {
-            docItem.setBizCodeList(GsonUtils.getInstance().fromList(apiResponseStr, CustomCode.class));
+        if (Objects.nonNull(docInfo.get("summary"))) {
+            docItem.setSummary(docInfo.get("summary").getAsString());
         }
-        docItem.setModuleOrder(NumberUtils.toInt(docInfo.get("module_order").getAsString(), 0));
-        docItem.setApiOrder(NumberUtils.toInt(docInfo.get("api_order").getAsString(), 0));
+        if (Objects.nonNull(docInfo.get("description"))) {
+            docItem.setDescription(docInfo.get("description").getAsString());
+        }
+        docItem.setConsumes(GsonUtils.getGson().fromJson(docInfo.getAsJsonArray("consumes"), new TypeToken<List<String>>() {
+        }.getType()));
+        docItem.setProduces(GsonUtils.getGson().fromJson(docInfo.getAsJsonArray("produces"), new TypeToken<List<String>>() {
+        }.getType()));
+
+        if (Objects.nonNull(docInfo.get("multiple"))) {
+            docItem.setMultiple(true);
+        }
+        if (Objects.nonNull(docInfo.get("apiResponse"))) {
+            docItem.setBizCodeList(GsonUtils.getInstance().fromList(docInfo.get("apiResponse").getAsString(), CustomCode.class));
+        }
+        if (Objects.nonNull(docInfo.get("module_order"))) {
+            docItem.setModuleOrder(NumberUtils.toInt(docInfo.get("module_order").getAsString(), 0));
+        }
+        if (Objects.nonNull(docInfo.get("api_order"))) {
+            docItem.setApiOrder(NumberUtils.toInt(docInfo.get("api_order").getAsString(), 0));
+        }
         String moduleName = this.buildModuleName(docInfo, docRoot, basePath);
         docItem.setModule(moduleName);
-        List<DocParameter> docParameterList = this.buildRequestParameterList(docInfo, docRoot);
-        docItem.setRequestParameters(docParameterList);
-
+        this.buildRequestParameterList(docItem, docInfo, docRoot);
         List<DocParameter> responseParameterList = this.buildResponseParameterList(docInfo, docRoot);
         docItem.setResponseParameters(responseParameterList);
         return docItem;
     }
 
     protected String buildModuleName(final JsonObject docInfo, final JsonObject docRoot, final String basePath) {
-        final String title = Optional.ofNullable(docRoot.getAsJsonObject("info")).map(jsonObject -> jsonObject.get("title").getAsString()).orElse(basePath);
         JsonArray tags = docInfo.getAsJsonArray("tags");
-        if (Objects.nonNull(tags) && tags.size() > 0) {
+        if (Objects.nonNull(tags) && !tags.isEmpty()) {
             return tags.get(0).getAsString();
         }
-        return title;
+        return Optional.ofNullable(docRoot.getAsJsonObject("info")).map(jsonObject -> jsonObject.get("title").getAsString()).orElse(basePath);
     }
 
-    protected List<DocParameter> buildRequestParameterList(final JsonObject docInfo, final JsonObject docRoot) {
+    protected void buildRequestParameterList(final DocItem docItem, final JsonObject docInfo,
+        final JsonObject docRoot) {
         Optional<JsonArray> parametersOptional = Optional.ofNullable(docInfo.getAsJsonArray("parameters"));
         JsonArray parameters = parametersOptional.orElse(new JsonArray());
-        List<DocParameter> docParameterList = new ArrayList<>();
+        List<DocParameter> docRequestParameterList = new ArrayList<>();
+        List<DocParameter> docHeaderParameterList = new ArrayList<>();
         for (int i = 0; i < parameters.size(); i++) {
             JsonObject fieldJson = parameters.get(i).getAsJsonObject();
             JsonObject schema = fieldJson.getAsJsonObject("schema");
@@ -186,23 +185,27 @@ public class SwaggerDocParser implements DocParser {
                 RefInfo refInfo = getRefInfo(schema);
                 if (Objects.nonNull(refInfo)) {
                     List<DocParameter> parameterList = this.buildDocParameters(refInfo.ref, docRoot, true);
-                    docParameterList.addAll(parameterList);
+                    docRequestParameterList.addAll(parameterList);
                 }
             } else {
                 DocParameter docParameter = GsonUtils.getInstance().fromJson(fieldJson, DocParameter.class);
-                docParameterList.add(docParameter);
+                JsonElement inElement = fieldJson.get("in");
+                if (Objects.nonNull(inElement) && "header".equals(inElement.getAsString())) {
+                    docHeaderParameterList.add(docParameter);
+                } else {
+                    docRequestParameterList.add(docParameter);
+                }
             }
         }
 
-        Map<String, List<DocParameter>> collect = docParameterList.stream()
+        Map<String, List<DocParameter>> collect = docRequestParameterList.stream()
             .filter(docParameter -> docParameter.getName().contains("."))
             .map(docParameter -> {
                 String name = docParameter.getName();
                 int index = name.indexOf('.');
                 String module = name.substring(0, index);
                 String newName = name.substring(index + 1);
-                DocParameter ret = new DocParameter();
-                BeanUtils.copyProperties(docParameter, ret);
+                DocParameter ret = DocParameter.copy(docParameter);
                 ret.setName(newName);
                 ret.setModule(module);
                 return ret;
@@ -214,18 +217,21 @@ public class SwaggerDocParser implements DocParser {
             moduleDoc.setName(key);
             moduleDoc.setType("object");
             moduleDoc.setRefs(value);
-            docParameterList.add(moduleDoc);
+            docRequestParameterList.add(moduleDoc);
         });
 
-        return docParameterList.stream()
+        List<DocParameter> requestParameterList = docRequestParameterList.stream()
             .filter(docParameter -> !docParameter.getName().contains("."))
             .collect(Collectors.toList());
+
+        docItem.setRequestParameters(requestParameterList);
+        docItem.setRequestHeaders(docHeaderParameterList);
     }
 
     protected List<DocParameter> buildResponseParameterList(final JsonObject docInfo, final JsonObject docRoot) {
         RefInfo refInfo = getResponseRefInfo(docInfo);
         List<DocParameter> respParameterList = Collections.emptyList();
-        if (refInfo != null) {
+        if (Objects.nonNull(refInfo)) {
             String responseRef = refInfo.ref;
             respParameterList = this.buildDocParameters(responseRef, docRoot, true);
             // If an array is returned.
@@ -241,10 +247,10 @@ public class SwaggerDocParser implements DocParser {
     }
 
     protected List<DocParameter> buildDocParameters(final String ref, final JsonObject docRoot, final boolean doSubRef) {
-        JsonObject responseObject = docRoot.getAsJsonObject("definitions").getAsJsonObject(ref);
-        String className = responseObject.get("title").getAsString();
-        JsonObject extProperties = docRoot.getAsJsonObject(className);
+        JsonObject responseObject = docRoot.getAsJsonObject("components").getAsJsonObject("schemas").getAsJsonObject(ref);
+        JsonObject extProperties = responseObject.getAsJsonObject("properties");
         JsonArray requiredProperties = responseObject.getAsJsonArray("required");
+        List<String> requiredFieldList = this.jsonArrayToStringList(requiredProperties);
         JsonObject properties = responseObject.getAsJsonObject("properties");
         List<DocParameter> docParameterList = new ArrayList<>();
         if (Objects.isNull(properties)) {
@@ -255,16 +261,13 @@ public class SwaggerDocParser implements DocParser {
             JsonObject fieldInfo = properties.getAsJsonObject(fieldName);
             DocParameter docParameter = GsonUtils.getInstance().fromJson(fieldInfo, DocParameter.class);
             docParameter.setName(fieldName);
-            docParameter.setRequired(
-                    !(requiredProperties == null || requiredProperties.isEmpty()) && requiredProperties.contains(fieldInfo));
+            docParameter.setRequired(requiredFieldList.contains(fieldName));
             if (Objects.nonNull(extProperties)) {
                 JsonObject prop = extProperties.getAsJsonObject(fieldName);
                 if (Objects.nonNull(prop)) {
-                    String maxLength = prop.get("maxLength").getAsString();
-                    docParameter.setMaxLength(Objects.isNull(maxLength) ? "-" : maxLength);
-                    String required = prop.get("required").getAsString();
-                    if (Objects.nonNull(required)) {
-                        docParameter.setRequired(Boolean.parseBoolean(required));
+                    docParameter.setMaxLength(Objects.isNull(prop.get("maxLength")) ? "-" : prop.get("maxLength").getAsString());
+                    if (Objects.nonNull(prop.get("required"))) {
+                        docParameter.setRequired(Boolean.parseBoolean(prop.get("required").getAsString()));
                     }
                 }
             }
@@ -280,9 +283,24 @@ public class SwaggerDocParser implements DocParser {
         return docParameterList;
     }
 
+    private List<String> jsonArrayToStringList(final JsonArray jsonArray) {
+        if (Objects.isNull(jsonArray)) {
+            return Collections.emptyList();
+        }
+        List<String> list = new ArrayList<>(jsonArray.size());
+        for (JsonElement jsonElement : jsonArray) {
+            if (jsonElement.isJsonNull()) {
+                continue;
+            }
+            String objStr = jsonElement.getAsString();
+            list.add(objStr);
+        }
+        return list;
+    }
+
     /**
      * Simple object return, pure array return.
-
+     *
      * @param docInfo docInfo
      * @return RefInfo
      */
@@ -295,17 +313,18 @@ public class SwaggerDocParser implements DocParser {
     }
 
     private RefInfo getRefInfo(final JsonObject jsonObject) {
-        String ref;
-        boolean isArray = "array".equals(jsonObject.get("type").getAsString());
+        JsonElement refElement;
+        boolean isArray = Objects.nonNull(jsonObject.get("type")) && "array".equals(jsonObject.get("type").getAsString());
         if (isArray) {
-            ref = jsonObject.getAsJsonObject("items").get("$ref").getAsString();
+            refElement = jsonObject.getAsJsonObject("items").get("$ref");
         } else {
             // #/definitions/xxx
-            ref = jsonObject.get("$ref").getAsString();
+            refElement = jsonObject.get("$ref");
         }
-        if (Objects.isNull(ref)) {
+        if (Objects.isNull(refElement)) {
             return null;
         }
+        String ref = refElement.getAsString();
         int index = ref.lastIndexOf("/");
         if (index > -1) {
             ref = ref.substring(index + 1);

@@ -17,9 +17,11 @@
 
 package org.apache.shenyu.plugin.sync.data.websocket.config;
 
+import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
  */
 public class WebsocketConfigTest {
 
-    private static final String URLS = "ws://localhost:9095/websocket";
+    private static final List<String> URLS = Lists.newArrayList("ws://localhost:9095/websocket");
+
+    private static final String ALLOW_ORIGIN = "ws://localhost:9095";
 
     private WebsocketConfig websocketConfig;
 
@@ -38,17 +42,20 @@ public class WebsocketConfigTest {
     public void setUp() {
         websocketConfig = new WebsocketConfig();
         websocketConfig.setUrls(URLS);
+        websocketConfig.setAllowOrigin(ALLOW_ORIGIN);
     }
 
     @Test
     public void testGetterSetter() {
         assertEquals(URLS, websocketConfig.getUrls());
+        assertEquals(ALLOW_ORIGIN, websocketConfig.getAllowOrigin());
     }
 
     @Test
     public void testEquals() {
         WebsocketConfig that = new WebsocketConfig();
         that.setUrls(URLS);
+        that.setAllowOrigin(ALLOW_ORIGIN);
         assertEquals(websocketConfig, websocketConfig);
         assertEquals(websocketConfig, that);
         assertNotEquals(websocketConfig, null);
@@ -57,13 +64,13 @@ public class WebsocketConfigTest {
 
     @Test
     public void testHashCode() {
-        assertEquals(Objects.hash(websocketConfig.getUrls()), websocketConfig.hashCode());
+        assertEquals(Objects.hash(websocketConfig.getUrls(), websocketConfig.getAllowOrigin()), websocketConfig.hashCode());
     }
 
     @Test
     public void testToString() {
-        String[] array = {"WebsocketConfig{urls='", "'}"};
-        String expected = String.join(websocketConfig.getUrls(), array);
+        String toString = "WebsocketConfig{urls='%s, allowOrigin='%s}";
+        String expected = String.format(toString, URLS, ALLOW_ORIGIN);
         assertEquals(expected, websocketConfig.toString());
     }
 }

@@ -17,18 +17,30 @@
 
 package org.apache.shenyu.springboot.starter.sync.data.nacos;
 
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.config.ConfigService;
+
+import org.apache.shenyu.common.config.ShenyuConfig;
 import org.apache.shenyu.sync.data.api.SyncDataService;
+import org.apache.shenyu.sync.data.nacos.config.NacosACMConfig;
 import org.apache.shenyu.sync.data.nacos.config.NacosConfig;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Properties;
+
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * The test case for {@link NacosSyncDataConfiguration}.
@@ -42,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
         })
 @EnableAutoConfiguration
 @MockBean(name = "nacosConfigService", value = NacosMockConfigService.class, answer = CALLS_REAL_METHODS)
+@MockBean(name = "shenyuConfig", value = ShenyuConfig.class, answer = CALLS_REAL_METHODS)
 public final class NacosSyncDataConfigurationTest {
 
     @Autowired
@@ -58,5 +71,28 @@ public final class NacosSyncDataConfigurationTest {
     @Test
     public void nacosConfigTest() {
         assertNotNull(nacosConfig);
+    }
+
+    @Test
+    public void nacosConfigServiceTest() {
+        try (MockedStatic<NacosFactory> nacosFactoryMockedStatic = mockStatic(NacosFactory.class)) {
+            final NacosConfig nacosConfig2 = new NacosConfig();
+            final NacosACMConfig nacosACMConfig = new NacosACMConfig();
+            nacosConfig2.setAcm(nacosACMConfig);
+            nacosFactoryMockedStatic.when(() -> NacosFactory.createConfigService(any(Properties.class))).thenReturn(mock(ConfigService.class));
+            nacosConfig2.setUrl("url");
+            final NacosSyncDataConfiguration nacosSyncDataConfiguration = new NacosSyncDataConfiguration();
+            Assertions.assertDoesNotThrow(() -> nacosSyncDataConfiguration.nacosConfigService(nacosConfig2));
+            nacosConfig2.setNamespace("url");
+            nacosConfig2.setUsername("username");
+            nacosConfig2.setPassword("password");
+            Assertions.assertDoesNotThrow(() -> nacosSyncDataConfiguration.nacosConfigService(nacosConfig2));
+            nacosACMConfig.setEnabled(true);
+            nacosACMConfig.setEndpoint("acm.aliyun.com");
+            nacosACMConfig.setAccessKey("accessKey");
+            nacosACMConfig.setNamespace("namespace");
+            nacosACMConfig.setSecretKey("secretKey");
+            Assertions.assertDoesNotThrow(() -> nacosSyncDataConfiguration.nacosConfigService(nacosConfig2));
+        }
     }
 }

@@ -1,19 +1,18 @@
 /*
- *   Licensed to the Apache Software Foundation (ASF) under one or more
- *   contributor license agreements.  See the NOTICE file distributed with
- *   this work for additional information regarding copyright ownership.
- *   The ASF licenses this file to You under the Apache License, Version 2.0
- *   (the "License"); you may not use this file except in compliance with
- *   the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.shenyu.register.common.dto;
@@ -43,6 +42,8 @@ public class URIRegisterDTO implements DataTypeParent {
 
     private EventType eventType;
     
+    private String namespaceId;
+    
     /**
      * Instantiates a new Uri register dto.
      *
@@ -55,8 +56,8 @@ public class URIRegisterDTO implements DataTypeParent {
      * @param eventType the event type
      */
     public URIRegisterDTO(final String protocol, final String appName, final String contextPath,
-                          final String rpcType, final String host,
-                          final Integer port, final EventType eventType) {
+                          final String rpcType, final String host, final Integer port,
+                          final EventType eventType, final String namespaceId) {
         this.protocol = protocol;
         this.appName = appName;
         this.contextPath = contextPath;
@@ -64,6 +65,7 @@ public class URIRegisterDTO implements DataTypeParent {
         this.host = host;
         this.port = port;
         this.eventType = eventType;
+        this.namespaceId = namespaceId;
     }
     
     /**
@@ -80,6 +82,7 @@ public class URIRegisterDTO implements DataTypeParent {
         host = builder.host;
         port = builder.port;
         eventType = builder.eventType;
+        namespaceId = builder.namespaceId;
     }
     
     /**
@@ -234,6 +237,24 @@ public class URIRegisterDTO implements DataTypeParent {
     }
     
     /**
+     * getNamespaceId.
+     *
+     * @return String namespace
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+    
+    /**
+     * setNamespaceId.
+     *
+     * @param namespaceId namespace id
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
+    
+    /**
      * setEventType.
      *
      * @param eventType eventType
@@ -248,7 +269,7 @@ public class URIRegisterDTO implements DataTypeParent {
             return Boolean.TRUE;
         }
 
-        if (o == null || getClass() != o.getClass()) {
+        if (Objects.isNull(o) || getClass() != o.getClass()) {
             return Boolean.FALSE;
         }
 
@@ -259,7 +280,8 @@ public class URIRegisterDTO implements DataTypeParent {
                 && Objects.equals(getRpcType(), that.getRpcType())
                 && Objects.equals(getHost(), that.getHost())
                 && Objects.equals(getPort(), that.getPort())
-                && getEventType() == that.getEventType();
+                && getEventType() == that.getEventType()
+                && Objects.equals(getNamespaceId(), that.getNamespaceId());
     }
 
     @Override
@@ -289,6 +311,8 @@ public class URIRegisterDTO implements DataTypeParent {
                 + port
                 + ", eventType="
                 + eventType
+                + ", namespaceId="
+                + namespaceId
                 + '}';
     }
 
@@ -310,6 +334,8 @@ public class URIRegisterDTO implements DataTypeParent {
         private Integer port;
 
         private EventType eventType;
+        
+        private String namespaceId;
 
         private Builder() {
         }
@@ -390,7 +416,18 @@ public class URIRegisterDTO implements DataTypeParent {
             this.eventType = eventType;
             return this;
         }
-    
+        
+        /**
+         * namespace.
+         *
+         * @param namespaceId namespace id
+         * @return Builder builder
+         */
+        public Builder namespaceId(final String namespaceId) {
+            this.namespaceId = namespaceId;
+            return this;
+        }
+
         /**
          * build.
          *

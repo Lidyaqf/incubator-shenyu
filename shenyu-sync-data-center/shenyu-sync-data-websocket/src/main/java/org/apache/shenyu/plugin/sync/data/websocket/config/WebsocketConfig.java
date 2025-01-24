@@ -17,6 +17,7 @@
 
 package org.apache.shenyu.plugin.sync.data.websocket.config;
 
+import java.util.List;
 import java.util.Objects;
 
 public class WebsocketConfig {
@@ -25,14 +26,19 @@ public class WebsocketConfig {
      * if have more shenyu admin url,please config like this.
      * 127.0.0.1:8888,127.0.0.1:8889
      */
-    private String urls;
+    private List<String> urls;
+
+    /**
+     * allowOrigin.
+     */
+    private String allowOrigin;
 
     /**
      * get urls.
      *
      * @return urls
      */
-    public String getUrls() {
+    public List<String> getUrls() {
         return urls;
     }
 
@@ -41,25 +47,42 @@ public class WebsocketConfig {
      *
      * @param urls urls
      */
-    public void setUrls(final String urls) {
+    public void setUrls(final List<String> urls) {
         this.urls = urls;
     }
 
+    /**
+     * get allowOrigin.
+     * @return allowOrigin
+     */
+    public String getAllowOrigin() {
+        return allowOrigin;
+    }
+
+    /**
+     * set allowOrigin.
+     * @param allowOrigin allowOrigin
+     */
+    public void setAllowOrigin(final String allowOrigin) {
+        this.allowOrigin = allowOrigin;
+    }
+    
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (Objects.isNull(o) || getClass() != o.getClass()) {
             return false;
         }
         WebsocketConfig that = (WebsocketConfig) o;
-        return Objects.equals(urls, that.urls);
+        return Objects.equals(urls, that.urls)
+                && Objects.equals(allowOrigin, that.allowOrigin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(urls);
+        return Objects.hash(urls, allowOrigin);
     }
 
     @Override
@@ -67,7 +90,8 @@ public class WebsocketConfig {
         return "WebsocketConfig{"
                 + "urls='"
                 + urls
-                + '\''
+                + ", allowOrigin='"
+                + allowOrigin
                 + '}';
     }
 }

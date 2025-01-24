@@ -17,33 +17,20 @@
 
 package org.apache.shenyu.springboot.starter.plugin.springcloud;
 
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.IClientConfig;
-import com.netflix.loadbalancer.IRule;
-import com.netflix.loadbalancer.PollingServerListUpdater;
-import com.netflix.loadbalancer.ServerListUpdater;
 import org.apache.shenyu.common.config.ShenyuConfig;
-import org.apache.shenyu.common.constant.Constants;
 import org.apache.shenyu.plugin.api.ShenyuPlugin;
 import org.apache.shenyu.plugin.api.context.ShenyuContextDecorator;
 import org.apache.shenyu.plugin.base.handler.PluginDataHandler;
 import org.apache.shenyu.plugin.springcloud.SpringCloudPlugin;
 import org.apache.shenyu.plugin.springcloud.context.SpringCloudShenyuContextDecorator;
 import org.apache.shenyu.plugin.springcloud.handler.SpringCloudPluginDataHandler;
-import org.apache.shenyu.plugin.springcloud.loadbalance.LoadBalanceRule;
-import org.apache.shenyu.plugin.springcloud.loadbalance.client.CustomBlockingLoadBalancerClient;
+import org.apache.shenyu.plugin.springcloud.listener.SpringCloudHeartBeatListener;
+import org.apache.shenyu.plugin.springcloud.loadbalance.ShenyuSpringCloudServiceChooser;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
-import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
-import org.springframework.cloud.netflix.ribbon.RibbonClientSpecification;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-
-import java.util.Optional;
+import org.springframework.core.env.Environment;
 
 /**
  * The type Spring cloud plugin configuration.
@@ -52,28 +39,25 @@ import java.util.Optional;
 @ConditionalOnProperty(value = {"shenyu.plugins.spring-cloud.enabled"}, havingValue = "true", matchIfMissing = true)
 public class SpringCloudPluginConfiguration {
 
-
     /**
-     * custom blocking loadbalancer.
-     * @param loadBalancerClientFactory loadBalancerFactory
-     * @return loadBalancerClient
+     * shenyu springcloud loadbalancer.
+     *
+     * @return {@linkplain ShenyuSpringCloudServiceChooser}
      */
-    @ConditionalOnProperty(value = {"spring.cloud.loadbalancer.ribbon.enabled"}, havingValue = "false", matchIfMissing = true)
-    @ConditionalOnClass(value = BlockingLoadBalancerClient.class)
     @Bean
-    public LoadBalancerClient blockingLoadBalancerClient(final ObjectProvider<LoadBalancerClientFactory> loadBalancerClientFactory) {
-        return new CustomBlockingLoadBalancerClient(loadBalancerClientFactory.getIfAvailable());
+    public ShenyuSpringCloudServiceChooser shenyuSpringCloudLoadBalancerClient() {
+        return new ShenyuSpringCloudServiceChooser();
     }
 
     /**
      * init springCloud plugin.
      *
-     * @param loadBalancerClient the load balancer client
+     * @param serviceChooser service chooser
      * @return {@linkplain SpringCloudPlugin}
      */
     @Bean
-    public ShenyuPlugin springCloudPlugin(final ObjectProvider<LoadBalancerClient> loadBalancerClient) {
-        return new SpringCloudPlugin(loadBalancerClient.getIfAvailable());
+    public ShenyuPlugin springCloudPlugin(final ObjectProvider<ShenyuSpringCloudServiceChooser> serviceChooser) {
+        return new SpringCloudPlugin(serviceChooser.getIfAvailable());
     }
 
     /**
@@ -89,38 +73,24 @@ public class SpringCloudPluginConfiguration {
     /**
      * Spring cloud plugin data handler.
      *
+     * @param shenyuConfig the shenyu config
+     * @param env the Environment
      * @return the plugin data handler
      */
     @Bean
-    public PluginDataHandler springCloudPluginDataHandler() {
-        return new SpringCloudPluginDataHandler();
+    public PluginDataHandler springCloudPluginDataHandler(final ShenyuConfig shenyuConfig, final Environment env) {
+        return new SpringCloudPluginDataHandler(shenyuConfig.getSpringCloudCache(), env);
     }
-
+    
     /**
-     * Custom ribbon IRule.
+     * Spring cloud heart beat listener.
      *
-     * @return ribbonClientSpecification
+     * @param shenyuConfig the shenyu config
+     * @return the spring cloud heartbeat listener {@linkplain SpringCloudHeartBeatListener}
      */
     @Bean
-    public RibbonClientSpecification ribbonClientSpecification() {
-        Class<?>[] classes = new Class[]{SpringCloudClientConfiguration.class};
-        return new RibbonClientSpecification(String.join(".", Constants.DEFAULT.toLowerCase(), RibbonClientSpecification.class.getName()), classes);
-    }
-
-    static class SpringCloudClientConfiguration {
-        @Bean
-        public IRule ribbonRule() {
-            return new LoadBalanceRule();
-        }
-
-        @Lazy
-        @Bean
-        public ServerListUpdater ribbonServerListUpdater(final IClientConfig config,
-                                                         final ShenyuConfig shenyuConfig) {
-            Integer refreshInterval = Optional.ofNullable(shenyuConfig.getRibbon().getServerListRefreshInterval()).orElseGet(() -> 10000);
-            config.set(CommonClientConfigKey.ServerListRefreshInterval, refreshInterval);
-            return new PollingServerListUpdater(config);
-        }
+    public SpringCloudHeartBeatListener springCloudHeartBeatListener(final ShenyuConfig shenyuConfig) {
+        return new SpringCloudHeartBeatListener(shenyuConfig.getSpringCloudCache());
     }
 
 }

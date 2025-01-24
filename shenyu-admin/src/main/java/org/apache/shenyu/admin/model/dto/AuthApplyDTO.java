@@ -17,6 +17,11 @@
 
 package org.apache.shenyu.admin.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import org.apache.shenyu.admin.mapper.NamespaceMapper;
+import org.apache.shenyu.admin.validation.annotation.Existed;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -30,10 +35,13 @@ public class AuthApplyDTO implements Serializable {
 
     private String appKey;
 
+    @NotBlank(message = "userId cannot be empty!")
     private String userId;
 
+    @Pattern(regexp = "\\+?\\d{7,11}", message = "number is illegal, length 7 to 11! e.g. +1234567 or 1234567")
     private String phone;
 
+    @NotBlank(message = "appName cannot be empty!")
     private String appName;
 
     private String appParam;
@@ -43,6 +51,13 @@ public class AuthApplyDTO implements Serializable {
     private Boolean open;
 
     private List<String> pathList;
+
+    /**
+     * namespaceId.
+     */
+    @NotBlank
+    @Existed(message = "namespaceId is not existed", provider = NamespaceMapper.class)
+    private String namespaceId;
 
     /**
      * Gets the value of appKey.
@@ -188,6 +203,24 @@ public class AuthApplyDTO implements Serializable {
         this.pathList = pathList;
     }
 
+    /**
+     * get namespaceId.
+     *
+     * @return namespaceId
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    /**
+     * set namespaceId.
+     *
+     * @param namespaceId namespaceId
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -204,11 +237,12 @@ public class AuthApplyDTO implements Serializable {
                 && Objects.equals(appParam, that.appParam)
                 && Objects.equals(extInfo, that.extInfo)
                 && Objects.equals(open, that.open)
-                && Objects.equals(pathList, that.pathList);
+                && Objects.equals(pathList, that.pathList)
+                && Objects.equals(namespaceId, that.namespaceId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appKey, userId, phone, appName, appParam, extInfo, open, pathList);
+        return Objects.hash(appKey, userId, phone, appName, appParam, extInfo, open, pathList, namespaceId);
     }
 }

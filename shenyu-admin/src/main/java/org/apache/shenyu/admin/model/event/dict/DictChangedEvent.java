@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.ShenyuDictDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class DictChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code DictChangedEvent}.operator is unknown.
      *
-     * @param source Current dict state
-     * @param before Before the change dict state
-     * @param type   event type
+     * @param source   Current dict state
+     * @param before   Before the change dict state
+     * @param type     event type
+     * @param operator operator
      */
     public DictChangedEvent(final ShenyuDictDO source, final ShenyuDictDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -83,6 +85,6 @@ public class DictChangedEvent extends AdminDataModelChangedEvent {
     
     @Override
     public String eventName() {
-        return "dict";
+        return Constants.EVENT_NAME_DICT;
     }
 }

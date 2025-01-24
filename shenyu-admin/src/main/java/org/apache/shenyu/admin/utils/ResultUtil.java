@@ -13,7 +13,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.shenyu.admin.utils;
@@ -60,5 +59,15 @@ public final class ResultUtil {
      */
     public static <T> AdminResult<T> ok(final T data, final String message) {
         return new AdminResult<>(CommonErrorCode.SUCCESSFUL, message, data);
+    }
+    
+    /**
+     * error.
+     * @param message response message
+     * @param <T>     response body type
+     * @return admin result
+     */
+    public static <T> AdminResult<T> error(final String message) {
+        return new AdminResult<>(CommonErrorCode.ERROR, message, null);
     }
 }

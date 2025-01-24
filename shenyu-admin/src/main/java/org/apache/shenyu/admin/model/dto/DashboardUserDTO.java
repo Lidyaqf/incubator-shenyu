@@ -17,7 +17,12 @@
 
 package org.apache.shenyu.admin.model.dto;
 
-import javax.validation.constraints.NotNull;
+import org.apache.shenyu.admin.model.constant.RegConstant;
+import org.apache.shenyu.admin.utils.FailI18nMessage;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -37,12 +42,13 @@ public class DashboardUserDTO implements Serializable {
     /**
      * user name.
      */
-    @NotNull
+    @NotBlank
     private String userName;
 
     /**
      * user password.
      */
+    @Pattern(regexp = RegConstant.PASSWORD_RULE, message = '{' + FailI18nMessage.PASSWORD_MUST + '}')
     private String password;
 
     /**
@@ -53,23 +59,30 @@ public class DashboardUserDTO implements Serializable {
     /**
      * current role list.
      */
-    private List<String> roles;
+    private List<@NotBlank String> roles;
 
     /**
      * whether enabled.
      */
+    @NotNull
     private Boolean enabled;
+
+    /**
+     * clientId.
+     */
+    private String clientId;
 
     public DashboardUserDTO() {
     }
 
-    public DashboardUserDTO(final String id, @NotNull final String userName, final String password, final Integer role, final List<String> roles, final Boolean enabled) {
+    public DashboardUserDTO(final String id, @NotNull final String userName, final String password, final Integer role, final List<String> roles, final Boolean enabled, final String clientId) {
         this.id = id;
         this.userName = userName;
         this.password = password;
         this.role = role;
         this.roles = roles;
         this.enabled = enabled;
+        this.clientId = clientId;
     }
 
     /**
@@ -181,6 +194,24 @@ public class DashboardUserDTO implements Serializable {
     }
 
     /**
+     * Gets the value of clientId.
+     *
+     * @return the value of clientId
+     */
+    public String getClientId() {
+        return clientId;
+    }
+
+    /**
+     * Sets the clientId.
+     *
+     * @param clientId clientId
+     */
+    public void setClientId(final String clientId) {
+        this.clientId = clientId;
+    }
+
+    /**
      * builder method.
      *
      * @return builder object.
@@ -224,6 +255,8 @@ public class DashboardUserDTO implements Serializable {
         private List<String> roles;
 
         private Boolean enabled;
+
+        private String clientId;
 
         private DashboardUserDTOBuilder() {
         }
@@ -295,12 +328,23 @@ public class DashboardUserDTO implements Serializable {
         }
 
         /**
+         * clientId.
+         *
+         * @param clientId the clientId.
+         * @return DashboardUserDTOBuilder.
+         */
+        public DashboardUserDTOBuilder clientId(final String clientId) {
+            this.clientId = clientId;
+            return this;
+        }
+
+        /**
          * build method.
          *
          * @return build object.
          */
         public DashboardUserDTO build() {
-            return new DashboardUserDTO(id, userName, password, role, roles, enabled);
+            return new DashboardUserDTO(id, userName, password, role, roles, enabled, clientId);
         }
     }
 }

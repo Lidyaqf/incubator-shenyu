@@ -17,18 +17,34 @@
 
 package org.apache.shenyu.common.utils;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shenyu.common.exception.ShenyuException;
+
+import java.util.Objects;
+
 /**
  * The type Param check utils.
  */
 public class ParamCheckUtils {
     
     /**
-     * Dubbo body is empty boolean.
+     * Body is empty boolean.
      *
      * @param body the body
      * @return the boolean
      */
-    public static boolean dubboBodyIsEmpty(final String body) {
-        return null == body || "".equals(body) || "{}".equals(body) || "null".equals(body);
+    public static boolean bodyIsEmpty(final String body) {
+        return Objects.isNull(body) || StringUtils.isEmpty(body) || "null".equals(body);
+    }
+
+    /**
+     * Check params length.
+     * @param argsLength params length.
+     * @param typesLength types length.
+     */
+    public static void checkParamsLength(final Integer argsLength, final Integer typesLength) {
+        if (argsLength < typesLength) {
+            throw new ShenyuException("args.length < types.length");
+        }
     }
 }

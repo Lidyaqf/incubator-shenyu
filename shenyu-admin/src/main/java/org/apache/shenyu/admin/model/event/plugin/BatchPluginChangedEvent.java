@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.PluginDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.BatchChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -34,9 +35,10 @@ public class BatchPluginChangedEvent extends BatchChangedEvent {
     /**
      * Create a new {@code PluginChangedEvent}.operator is unknown.
      *
-     * @param source Current plugin state
-     * @param before Before the change plugin state
-     * @param type   event type
+     * @param source   Current plugin state
+     * @param before   Before the change plugin state
+     * @param type     event type
+     * @param operator operator
      */
     public BatchPluginChangedEvent(final Collection<PluginDO> source, final Collection<PluginDO> before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -53,6 +55,6 @@ public class BatchPluginChangedEvent extends BatchChangedEvent {
     
     @Override
     public String eventName() {
-        return "plugin";
+        return Constants.EVENT_NAME_PLUGIN;
     }
 }

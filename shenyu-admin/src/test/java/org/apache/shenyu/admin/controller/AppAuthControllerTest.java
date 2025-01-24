@@ -17,17 +17,21 @@
 
 package org.apache.shenyu.admin.controller;
 
+import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.mapper.AppAuthMapper;
 import org.apache.shenyu.admin.mapper.AuthPathMapper;
+import org.apache.shenyu.admin.mapper.NamespaceMapper;
 import org.apache.shenyu.admin.model.dto.AppAuthDTO;
 import org.apache.shenyu.admin.model.dto.AuthApplyDTO;
 import org.apache.shenyu.admin.model.dto.AuthPathDTO;
 import org.apache.shenyu.admin.model.dto.AuthPathWarpDTO;
 import org.apache.shenyu.admin.model.dto.BatchCommonDTO;
 import org.apache.shenyu.admin.model.page.CommonPager;
+import org.apache.shenyu.admin.model.page.PageCondition;
 import org.apache.shenyu.admin.model.page.PageParameter;
 import org.apache.shenyu.admin.model.query.AppAuthQuery;
+import org.apache.shenyu.admin.model.query.RecordLogQueryCondition;
 import org.apache.shenyu.admin.model.result.ShenyuAdminResult;
 import org.apache.shenyu.admin.model.vo.AppAuthVO;
 import org.apache.shenyu.admin.model.vo.AuthPathVO;
@@ -58,6 +62,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.shenyu.common.constant.Constants.SYS_DEFAULT_NAMESPACE_ID;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -79,12 +84,15 @@ public final class AppAuthControllerTest {
 
     @Mock
     private AppAuthService appAuthService;
-    
+
     @Mock
     private AuthPathMapper authPathMapper;
-    
+
     @Mock
     private AppAuthMapper appAuthMapper;
+
+    @Mock
+    private NamespaceMapper namespaceMapper;
 
     private final AppAuthVO appAuthVO = new AppAuthVO("0001", "testAppKey", "testAppSecret",
             "testUser", "18600000000", "{\"extInfo\": \"test\"}",
@@ -100,19 +108,47 @@ public final class AppAuthControllerTest {
     }
 
     @Test
+    public void testSearch() throws Exception {
+        final String queryUri = "/appAuth/list/search";
+        PageCondition pageCondition = buildPageRecordLogQueryCondition();
+        this.mockMvc.perform(MockMvcRequestBuilders.post(queryUri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GsonUtils.getInstance().toJson(pageCondition)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is(ShenyuResultMessage.QUERY_SUCCESS)))
+                .andReturn();
+    }
+
+    @Test
+    public void testSearchAdaptor() throws Exception {
+        final String queryUri = "/appAuth/list/search/adaptor";
+        PageCondition pageCondition = buildPageRecordLogQueryCondition();
+        this.mockMvc.perform(MockMvcRequestBuilders.post(queryUri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GsonUtils.getInstance().toJson(pageCondition)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is(ShenyuResultMessage.QUERY_SUCCESS)))
+                .andReturn();
+    }
+
+    @Test
     public void testApply() throws Exception {
         final AuthApplyDTO authApplyDTO = new AuthApplyDTO();
         List<String> pathList = new ArrayList<>();
         pathList.add("/test");
         authApplyDTO.setAppName("testApp");
         authApplyDTO.setUserId("testUser");
-        authApplyDTO.setPhone("18600000000");
+        authApplyDTO.setPhone("+1234567");
         authApplyDTO.setAppParam("{\"type\": \"test\"}");
         authApplyDTO.setExtInfo("{\"extInfo\": \"test\"}");
         authApplyDTO.setOpen(true);
         authApplyDTO.setPathList(pathList);
+        authApplyDTO.setNamespaceId(SYS_DEFAULT_NAMESPACE_ID);
         given(this.appAuthService.applyCreate(authApplyDTO)).willReturn(
                 ShenyuAdminResult.success(ShenyuResultMessage.CREATE_SUCCESS));
+        SpringBeanUtils.getInstance().setApplicationContext(mock(ConfigurableApplicationContext.class));
+        when(SpringBeanUtils.getInstance().getBean(NamespaceMapper.class)).thenReturn(namespaceMapper);
+        when(namespaceMapper.existed(SYS_DEFAULT_NAMESPACE_ID)).thenReturn(true);
         this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/apply")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(GsonUtils.getInstance().toJson(authApplyDTO)))
@@ -134,6 +170,10 @@ public final class AppAuthControllerTest {
         authApplyDTO.setExtInfo("{\"extInfo\": \"test\"}");
         authApplyDTO.setOpen(true);
         authApplyDTO.setPathList(pathList);
+        authApplyDTO.setNamespaceId(SYS_DEFAULT_NAMESPACE_ID);
+        SpringBeanUtils.getInstance().setApplicationContext(mock(ConfigurableApplicationContext.class));
+        when(SpringBeanUtils.getInstance().getBean(NamespaceMapper.class)).thenReturn(namespaceMapper);
+        when(namespaceMapper.existed(SYS_DEFAULT_NAMESPACE_ID)).thenReturn(true);
         given(this.appAuthService.applyUpdate(authApplyDTO)).willReturn(
                 ShenyuAdminResult.success(ShenyuResultMessage.CREATE_SUCCESS));
         this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/apply")
@@ -156,14 +196,18 @@ public final class AppAuthControllerTest {
     @Test
     public void testFindPageByQuery() throws Exception {
         final PageParameter pageParameter = new PageParameter();
-        final AppAuthQuery appAuthQuery = new AppAuthQuery("testAppKey", "18600000000", pageParameter);
+        final AppAuthQuery appAuthQuery = new AppAuthQuery("testAppKey", "18600000000", pageParameter, SYS_DEFAULT_NAMESPACE_ID);
         final CommonPager<AppAuthVO> commonPager = new CommonPager<>(pageParameter, Collections.singletonList(appAuthVO));
         given(this.appAuthService.listByPage(appAuthQuery)).willReturn(commonPager);
+        SpringBeanUtils.getInstance().setApplicationContext(mock(ConfigurableApplicationContext.class));
+        when(SpringBeanUtils.getInstance().getBean(NamespaceMapper.class)).thenReturn(namespaceMapper);
+        when(namespaceMapper.existed(SYS_DEFAULT_NAMESPACE_ID)).thenReturn(true);
         this.mockMvc.perform(MockMvcRequestBuilders.get("/appAuth/findPageByQuery")
                 .param("appKey", "testAppKey")
                 .param("phone", "18600000000")
-                .param("currentPage", pageParameter.getCurrentPage() + "")
-                .param("pageSize", pageParameter.getPageSize() + ""))
+                .param("currentPage", String.valueOf(pageParameter.getCurrentPage()))
+                .param("pageSize", String.valueOf(pageParameter.getPageSize()))
+                .param("namespaceId", SYS_DEFAULT_NAMESPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(ShenyuResultMessage.QUERY_SUCCESS)))
                 .andExpect(jsonPath("$.data.dataList[0].appKey", is(appAuthVO.getAppKey())))
@@ -187,13 +231,16 @@ public final class AppAuthControllerTest {
         appAuthDTO.setId("0001");
         appAuthDTO.setAppKey("app key");
         appAuthDTO.setAppSecret("app secret");
-        appAuthDTO.setPhone("18600000001");
+        appAuthDTO.setPhone("1234567");
+        appAuthDTO.setNamespaceId(SYS_DEFAULT_NAMESPACE_ID);
         given(this.appAuthService.updateDetail(appAuthDTO)).willReturn(
                 ShenyuAdminResult.success(ShenyuResultMessage.UPDATE_SUCCESS));
         ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
         SpringBeanUtils.getInstance().setApplicationContext(context);
         when(SpringBeanUtils.getInstance().getBean(AppAuthMapper.class)).thenReturn(appAuthMapper);
         when(appAuthMapper.existed(appAuthDTO.getId())).thenReturn(true);
+        when(SpringBeanUtils.getInstance().getBean(NamespaceMapper.class)).thenReturn(namespaceMapper);
+        when(namespaceMapper.existed(SYS_DEFAULT_NAMESPACE_ID)).thenReturn(true);
         this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/updateDetail")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(GsonUtils.getInstance().toJson(appAuthDTO)))
@@ -258,6 +305,21 @@ public final class AppAuthControllerTest {
     }
 
     @Test
+    public void testBatchOpened() throws Exception {
+        final BatchCommonDTO batchCommonDTO = new BatchCommonDTO();
+        batchCommonDTO.setIds(Arrays.asList("0001", "0002"));
+        batchCommonDTO.setEnabled(true);
+        given(this.appAuthService.enabled(batchCommonDTO.getIds(), batchCommonDTO.getEnabled()))
+                .willReturn(StringUtils.EMPTY);
+        this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/batchOpened")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(GsonUtils.getInstance().toJson(batchCommonDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is(ShenyuResultMessage.ENABLE_SUCCESS)))
+                .andReturn();
+    }
+
+    @Test
     public void testBatchEnabled() throws Exception {
         final BatchCommonDTO batchCommonDTO = new BatchCommonDTO();
         batchCommonDTO.setIds(Arrays.asList("0001", "0002"));
@@ -269,6 +331,21 @@ public final class AppAuthControllerTest {
                 .content(GsonUtils.getInstance().toJson(batchCommonDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(ShenyuResultMessage.ENABLE_SUCCESS)))
+                .andReturn();
+    }
+
+    @Test
+    public void testBatchOpenedWithError() throws Exception {
+        final BatchCommonDTO batchCommonDTO = new BatchCommonDTO();
+        batchCommonDTO.setIds(Arrays.asList("0001", "0002"));
+        batchCommonDTO.setEnabled(true);
+        given(this.appAuthService.opened(batchCommonDTO.getIds(), batchCommonDTO.getEnabled()))
+                .willReturn(AdminConstants.ID_NOT_EXIST);
+        this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/batchOpened")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(GsonUtils.getInstance().toJson(batchCommonDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is(AdminConstants.ID_NOT_EXIST)))
                 .andReturn();
     }
 
@@ -292,5 +369,19 @@ public final class AppAuthControllerTest {
         this.mockMvc.perform(MockMvcRequestBuilders.post("/appAuth/syncData"))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    private PageCondition<RecordLogQueryCondition> buildPageRecordLogQueryCondition() {
+        PageCondition<RecordLogQueryCondition> pageCondition = new PageCondition<>();
+        pageCondition.setPageSize(10);
+        pageCondition.setPageNum(1);
+        RecordLogQueryCondition recordLogQueryCondition = new RecordLogQueryCondition();
+        recordLogQueryCondition.setUsername("admin");
+        recordLogQueryCondition.setKeyword("testerror");
+        recordLogQueryCondition.setStartTime(new Date());
+        recordLogQueryCondition.setEndTime(new Date());
+        recordLogQueryCondition.setType("");
+        pageCondition.setCondition(recordLogQueryCondition);
+        return pageCondition;
     }
 }

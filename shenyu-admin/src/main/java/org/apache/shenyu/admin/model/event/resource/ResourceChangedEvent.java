@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.ResourceDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class ResourceChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code ResourceChangedEvent}.operator is unknown.
      *
-     * @param source Current rule state
-     * @param before Before the change rule state
-     * @param type   event type
+     * @param source   Current rule state
+     * @param before   Before the change rule state
+     * @param type     event type
+     * @param operator operator
      */
     public ResourceChangedEvent(final ResourceDO source, final ResourceDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -83,6 +85,6 @@ public class ResourceChangedEvent extends AdminDataModelChangedEvent {
     
     @Override
     public String eventName() {
-        return "selector";
+        return Constants.EVENT_NAME_RESOURCE;
     }
 }

@@ -44,13 +44,11 @@ public class MetadataExecutorSubscriber implements ExecutorTypeSubscriber<MetaDa
 
     @Override
     public void executor(final Collection<MetaDataRegisterDTO> metaDataRegisterDTOList) {
-        for (MetaDataRegisterDTO metaDataRegisterDTO : metaDataRegisterDTOList) {
-            Optional.ofNullable(this.shenyuClientRegisterService.get(metaDataRegisterDTO.getRpcType()))
-                    .ifPresent(shenyuClientRegisterService -> {
-                        synchronized (shenyuClientRegisterService) {
-                            shenyuClientRegisterService.register(metaDataRegisterDTO);
-                        }
-                    });
-        }
+        metaDataRegisterDTOList.forEach(meta -> Optional.ofNullable(this.shenyuClientRegisterService.get(meta.getRpcType()))
+                .ifPresent(shenyuClientRegisterService -> {
+                    synchronized (shenyuClientRegisterService) {
+                        shenyuClientRegisterService.register(meta);
+                    }
+                }));
     }
 }

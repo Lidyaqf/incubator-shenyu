@@ -17,8 +17,10 @@
 
 package org.apache.shenyu.common.config;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.common.concurrent.MemoryLimitCalculator;
-import org.springframework.util.StringUtils;
+import org.apache.shenyu.common.constant.Constants;
+import org.apache.shenyu.common.enums.TrieMatchModeEnum;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,8 +52,6 @@ public class ShenyuConfig {
     private UpstreamCheck upstreamCheck = new UpstreamCheck();
 
     private CrossFilterConfig cross = new CrossFilterConfig();
-    
-    private InstanceConfig instance = new InstanceConfig();
 
     private RibbonConfig ribbon = new RibbonConfig();
     
@@ -62,7 +62,35 @@ public class ShenyuConfig {
     private SharedPool sharedPool = new SharedPool();
     
     private MetricsConfig metrics = new MetricsConfig();
+
+    private SelectorMatchCache selectorMatchCache = new SelectorMatchCache();
     
+    private RuleMatchCache ruleMatchCache = new RuleMatchCache();
+    
+    private SpringCloudCacheConfig springCloudCache = new SpringCloudCacheConfig();
+    
+    private AlertConfig alert = new AlertConfig();
+
+    private String namespace = Constants.SYS_DEFAULT_NAMESPACE_ID;
+
+    /**
+     * shenyu bootstrap namespace.
+     *
+     * @return namespace id
+     */
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /**
+     * Set shenyu bootstrap namespace, default value is {@link org.apache.shenyu.common.constant.Constants#SYS_DEFAULT_NAMESPACE_ID}.
+     *
+     * @param namespace namespace id
+     */
+    public void setNamespace(final String namespace) {
+        this.namespace = namespace;
+    }
+
     /**
      * Gets health.
      *
@@ -152,25 +180,7 @@ public class ShenyuConfig {
     public void setRibbon(final RibbonConfig ribbon) {
         this.ribbon = ribbon;
     }
-    
-    /**
-     * Gets instance.
-     *
-     * @return the instance
-     */
-    public InstanceConfig getInstance() {
-        return instance;
-    }
-    
-    /**
-     * Sets instance.
-     *
-     * @param instance the instance
-     */
-    public void setInstance(final InstanceConfig instance) {
-        this.instance = instance;
-    }
-    
+
     /**
      * Gets switch config.
      *
@@ -331,6 +341,76 @@ public class ShenyuConfig {
      */
     public void setCross(final CrossFilterConfig cross) {
         this.cross = cross;
+    }
+    
+    /**
+     * get selector match cache.
+     *
+     * @return selector match cache
+     */
+    public SelectorMatchCache getSelectorMatchCache() {
+        return selectorMatchCache;
+    }
+    
+    /**
+     * set selector match cache.
+     *
+     * @param selectorMatchCache selector match cache
+     */
+    public void setSelectorMatchCache(final SelectorMatchCache selectorMatchCache) {
+        this.selectorMatchCache = selectorMatchCache;
+    }
+    
+    /**
+     * get rule match cache.
+     *
+     * @return rule match cache
+     */
+    public RuleMatchCache getRuleMatchCache() {
+        return ruleMatchCache;
+    }
+    
+    /**
+     * set rule match cache.
+     *
+     * @param ruleMatchCache rule match cache
+     */
+    public void setRuleMatchCache(final RuleMatchCache ruleMatchCache) {
+        this.ruleMatchCache = ruleMatchCache;
+    }
+    
+    /**
+     * get spring cloud cache config.
+     *
+     * @return {@linkplain SpringCloudCacheConfig}
+     */
+    public SpringCloudCacheConfig getSpringCloudCache() {
+        return springCloudCache;
+    }
+    
+    /**
+     * set spring cloud cache config.
+     *
+     * @param springCloudCache cache config
+     */
+    public void setSpringCloudCache(final SpringCloudCacheConfig springCloudCache) {
+        this.springCloudCache = springCloudCache;
+    }
+    
+    /**
+     * Get shenyu alert report config.
+     * @return alert config
+     */
+    public AlertConfig getAlert() {
+        return alert;
+    }
+    
+    /**
+     * Set shenyu alert report config.
+     * @param alert alert config
+     */
+    public void setAlert(final AlertConfig alert) {
+        this.alert = alert;
     }
     
     /**
@@ -503,6 +583,170 @@ public class ShenyuConfig {
          */
         public void setScheduleDelay(final Integer scheduleDelay) {
             this.scheduleDelay = scheduleDelay;
+        }
+    }
+    
+    public static class SelectorMatchCache {
+        
+        /**
+         * the match cache, L1 cache.
+         */
+        private MatchCacheConfig cache = new MatchCacheConfig();
+        
+        /**
+         * the trie cache, L2 cache.
+         */
+        private ShenyuTrieConfig trie = new ShenyuTrieConfig();
+        
+/**
+         * get selector cache config.
+         *
+         * @return {@linkplain MatchCacheConfig}
+         */
+        public MatchCacheConfig getCache() {
+            return cache;
+        }
+        
+        /**
+         * set selector cache config.
+         *
+         * @param cache SelectorCacheConfig
+         */
+        public void setCache(final MatchCacheConfig cache) {
+            this.cache = cache;
+        }
+        
+        /**
+         * get rule cache Config.
+         *
+         * @return rule cache config
+         */
+        public ShenyuTrieConfig getTrie() {
+            return trie;
+        }
+        
+        /**
+         * set rule cache config.
+         *
+         * @param trie rule cache
+         */
+        public void setTrie(final ShenyuTrieConfig trie) {
+            this.trie = trie;
+        }
+    }
+    
+    public static class RuleMatchCache {
+        
+        /**
+         * the match cache, L1 cache.
+         */
+        private MatchCacheConfig cache = new MatchCacheConfig();
+        
+        /**
+         * the trie cache, L2 cache.
+         */
+        private ShenyuTrieConfig trie = new ShenyuTrieConfig();
+        
+        /**
+         * get selector cache config.
+         *
+         * @return {@linkplain MatchCacheConfig}
+         */
+        public MatchCacheConfig getCache() {
+            return cache;
+        }
+        
+        /**
+         * set selector cache config.
+         *
+         * @param cache SelectorCacheConfig
+         */
+        public void setCache(final MatchCacheConfig cache) {
+            this.cache = cache;
+        }
+        
+        /**
+         * get rule cache Config.
+         *
+         * @return rule cache config
+         */
+        public ShenyuTrieConfig getTrie() {
+            return trie;
+        }
+        
+        /**
+         * set rule cache config.
+         *
+         * @param trie rule cache
+         */
+        public void setTrie(final ShenyuTrieConfig trie) {
+            this.trie = trie;
+        }
+    }
+    
+    /**
+     * rule cache config.
+     */
+    public static class MatchCacheConfig {
+        
+        private Boolean enabled = Boolean.TRUE;
+
+        private int initialCapacity = 10000;
+        
+        private long maximumSize = 10000L;
+        
+        /**
+         * get rule cache enabled.
+         *
+         * @return rule cache enabled
+         */
+        public Boolean getEnabled() {
+            return enabled;
+        }
+        
+        /**
+         * set rule cache enabled.
+         *
+         * @param enabled rule cache enabled
+         */
+        public void setEnabled(final Boolean enabled) {
+            this.enabled = enabled;
+        }
+        
+        /**
+         * get initial capacity.
+         *
+         * @return initial capacity
+         */
+        public int getInitialCapacity() {
+            return initialCapacity;
+        }
+        
+        /**
+         * set initial capacity.
+         *
+         * @param initialCapacity initialCapacity
+         */
+        public void setInitialCapacity(final int initialCapacity) {
+            this.initialCapacity = initialCapacity;
+        }
+    
+        /**
+         * get maximum size.
+         *
+         * @return rule cache maximumSize
+         */
+        public long getMaximumSize() {
+            return maximumSize;
+        }
+    
+        /**
+         * set rule cache maximumSize.
+         *
+         * @param maximumSize rule cache maximumSize
+         */
+        public void setMaximumSize(final long maximumSize) {
+            this.maximumSize = maximumSize;
         }
     }
     
@@ -696,6 +940,8 @@ public class ShenyuConfig {
     public static class SwitchConfig {
         
         private boolean local = true;
+
+        private boolean collapseSlashes = true;
     
         /**
          * Gets local.
@@ -714,7 +960,24 @@ public class ShenyuConfig {
         public void setLocal(final boolean local) {
             this.local = local;
         }
-        
+
+        /**
+         * get collapseSlashes.
+         *
+         * @return collapseSlashes
+         */
+        public boolean getCollapseSlashes() {
+            return collapseSlashes;
+        }
+
+        /**
+         * set collapseSlashes.
+         *
+         * @param collapseSlashes collapseSlashes
+         */
+        public void setCollapseSlashes(final boolean collapseSlashes) {
+            this.collapseSlashes = collapseSlashes;
+        }
     }
     
     /**
@@ -723,6 +986,8 @@ public class ShenyuConfig {
     public static class UpstreamCheck {
     
         private boolean enabled;
+
+        private Integer poolSize = 10;
         
         private Integer timeout = 3000;
         
@@ -753,7 +1018,25 @@ public class ShenyuConfig {
         public void setEnabled(final boolean enabled) {
             this.enabled = enabled;
         }
-    
+
+        /**
+         * get checkThreadPoolSize.
+         *
+         * @return checkThreadPoolSize
+         */
+        public Integer getPoolSize() {
+            return poolSize;
+        }
+
+        /**
+         * set checkThreadPoolSize.
+         *
+         * @param poolSize checkThreadPoolSize
+         */
+        public void setPoolSize(final Integer poolSize) {
+            this.poolSize = poolSize;
+        }
+
         /**
          * Gets timeout.
          *
@@ -871,7 +1154,7 @@ public class ShenyuConfig {
         private static final Set<String> DEFAULT_ALLOWED_HEADERS;
 
         static {
-            DEFAULT_ALLOWED_HEADERS = new HashSet<String>() {
+            DEFAULT_ALLOWED_HEADERS = new HashSet<>() {
                 {
                     add("x-requested-with");
                     add("authorization");
@@ -882,6 +1165,7 @@ public class ShenyuConfig {
                     add("token");
                     add("username");
                     add("client");
+                    add(Constants.SHENYU_AUTHORIZATION);
                 }
             };
         }
@@ -898,9 +1182,11 @@ public class ShenyuConfig {
          */
         private String allowedMethods = "*";
 
-        private String allowedOrigin = "*";
+        private AllowedOriginConfig allowedOrigin = new AllowedOriginConfig();
 
-        private String allowedExpose = "*";
+        private boolean allowedAnyOrigin;
+
+        private String allowedExpose = "";
 
         private String maxAge = "18000";
 
@@ -914,7 +1200,7 @@ public class ShenyuConfig {
          */
         private String wrapperHeaders(final String headers) {
             final Set<String> headerSet = DEFAULT_ALLOWED_HEADERS;
-            if (StringUtils.hasText(headers)) {
+            if (StringUtils.isNotEmpty(headers)) {
                 headerSet.addAll(Stream.of(headers.split(",")).collect(Collectors.toSet()));
             }
             return String.join(",", headerSet);
@@ -979,7 +1265,7 @@ public class ShenyuConfig {
          *
          * @return the value of allowedOrigin
          */
-        public String getAllowedOrigin() {
+        public AllowedOriginConfig getAllowedOrigin() {
             return allowedOrigin;
         }
     
@@ -988,10 +1274,28 @@ public class ShenyuConfig {
          *
          * @param allowedOrigin allowedOrigin
          */
-        public void setAllowedOrigin(final String allowedOrigin) {
+        public void setAllowedOrigin(final AllowedOriginConfig allowedOrigin) {
             this.allowedOrigin = allowedOrigin;
         }
-    
+
+        /**
+         * Gets the value of allowedAnyOrigin.
+         *
+         * @return the value of allowedAnyOrigin
+         */
+        public boolean isAllowedAnyOrigin() {
+            return allowedAnyOrigin;
+        }
+
+        /**
+         * Sets the allowedExpose.
+         *
+         * @param allowedAnyOrigin allowedExpose
+         */
+        public void setAllowedAnyOrigin(final boolean allowedAnyOrigin) {
+            this.allowedAnyOrigin = allowedAnyOrigin;
+        }
+
         /**
          * Gets the value of allowedExpose.
          *
@@ -1045,111 +1349,111 @@ public class ShenyuConfig {
         public void setAllowCredentials(final boolean allowCredentials) {
             this.allowCredentials = allowCredentials;
         }
-    }
-    
-    /**
-     * The type Instance config.
-     */
-    public static class InstanceConfig {
-    
-        private boolean enabled;
-    
-        private String registerType;
-    
-        private String serverLists;
-    
-        private Properties props = new Properties();
-    
+
         /**
-         * Instantiates a new Instance config.
+         * the cors allowedOrigin config.
          */
-        public InstanceConfig() {
-        
-        }
-    
-        /**
-         * Instantiates a new Instance config.
-         *
-         * @param registerType the register type
-         * @param serverLists the server lists
-         * @param props the props
-         */
-        public InstanceConfig(final String registerType, final String serverLists, final Properties props) {
-            this.registerType = registerType;
-            this.serverLists = serverLists;
-            this.props = props;
-        }
-    
-        /**
-         * Gets enabled.
-         *
-         * @return the enabled
-         */
-        public boolean getEnabled() {
-            return enabled;
-        }
-    
-        /**
-         * Sets enabled.
-         *
-         * @param enabled the enabled
-         */
-        public void setEnabled(final boolean enabled) {
-            this.enabled = enabled;
-        }
-    
-        /**
-         * getRegisterType.
-         *
-         * @return String register type
-         */
-        public String getRegisterType() {
-            return registerType;
-        }
-    
-        /**
-         * setRegisterType.
-         *
-         * @param registerType registerType
-         */
-        public void setRegisterType(final String registerType) {
-            this.registerType = registerType;
-        }
-    
-        /**
-         * getServerLists.
-         *
-         * @return String server lists
-         */
-        public String getServerLists() {
-            return serverLists;
-        }
-    
-        /**
-         * setServerLists.
-         *
-         * @param serverLists serverLists
-         */
-        public void setServerLists(final String serverLists) {
-            this.serverLists = serverLists;
-        }
-    
-        /**
-         * getProps.
-         *
-         * @return String props
-         */
-        public Properties getProps() {
-            return props;
-        }
-    
-        /**
-         * setProps.
-         *
-         * @param props props
-         */
-        public void setProps(final Properties props) {
-            this.props = props;
+        public static class AllowedOriginConfig {
+
+            private String spacer = ".";
+
+            private String domain;
+
+            private Set<String> prefixes = new HashSet<>();
+
+            private Set<String> origins;
+
+            private String originRegex;
+
+            /**
+             * Gets the spacer.
+             *
+             * @return the value of spacer
+             */
+            public String getSpacer() {
+                return spacer;
+            }
+
+            /**
+             * Sets the spacer.
+             *
+             * @param spacer spacer
+             */
+            public void setSpacer(final String spacer) {
+                this.spacer = spacer;
+            }
+
+            /**
+             * Gets the domain.
+             *
+             * @return the value of domain
+             */
+            public String getDomain() {
+                return domain;
+            }
+
+            /**
+             * Sets the enabled.
+             *
+             * @param domain domain
+             */
+            public void setDomain(final String domain) {
+                this.domain = domain;
+            }
+
+            /**
+             * Gets the prefixes.
+             *
+             * @return the value of prefixes
+             */
+            public Set<String> getPrefixes() {
+                return prefixes;
+            }
+
+            /**
+             * Sets the enabled.
+             *
+             * @param prefixes prefixes
+             */
+            public void setPrefixes(final Set<String> prefixes) {
+                this.prefixes = prefixes;
+            }
+
+            /**
+             * Gets the prefixes.
+             *
+             * @return the value of prefixes
+             */
+            public Set<String> getOrigins() {
+                return origins;
+            }
+
+            /**
+             * Sets the origins.
+             *
+             * @param origins origins
+             */
+            public void setOrigins(final Set<String> origins) {
+                this.origins = origins;
+            }
+
+            /**
+             * Gets the originRegex.
+             *
+             * @return the value of originRegex
+             */
+            public String getOriginRegex() {
+                return originRegex;
+            }
+
+            /**
+             * Sets the originRegex.
+             *
+             * @param originRegex originRegex
+             */
+            public void setOriginRegex(final String originRegex) {
+                this.originRegex = originRegex;
+            }
         }
     }
     
@@ -1267,7 +1571,12 @@ public class ShenyuConfig {
          * max frame pay load size mb.
          */
         private Integer maxFramePayloadSize = 10;
-    
+
+        /**
+         * whether enable ping.
+         */
+        private Boolean enableProxyPing = false;
+
         /**
          * Get max frame payload size.
          *
@@ -1276,7 +1585,7 @@ public class ShenyuConfig {
         public Integer getMaxFramePayloadSize() {
             return maxFramePayloadSize;
         }
-    
+
         /**
          * Set max frame payload size.
          *
@@ -1284,6 +1593,22 @@ public class ShenyuConfig {
          */
         public void setMaxFramePayloadSize(final Integer maxFramePayloadSize) {
             this.maxFramePayloadSize = maxFramePayloadSize;
+        }
+
+        /**
+         * Get whether enable ping.
+         * @return whether ping is enabled
+         */
+        public Boolean getEnableProxyPing() {
+            return enableProxyPing;
+        }
+
+        /**
+         * enable ping or disable ping.
+         * @param enableProxyPing enable ping or disable ping
+         */
+        public void setEnableProxyPing(final boolean enableProxyPing) {
+            this.enableProxyPing = enableProxyPing;
         }
     }
     
@@ -1518,7 +1843,6 @@ public class ShenyuConfig {
     
         /**
          * Sets metrics name.
-         *
          * @param name the metrics name
          */
         public void setName(final String name) {
@@ -1527,7 +1851,6 @@ public class ShenyuConfig {
     
         /**
          * Gets host.
-         *
          * @return the host
          */
         public String getHost() {
@@ -1536,7 +1859,6 @@ public class ShenyuConfig {
     
         /**
          * Sets host.
-         *
          * @param host the host
          */
         public void setHost(final String host) {
@@ -1545,7 +1867,6 @@ public class ShenyuConfig {
     
         /**
          * Gets port.
-         *
          * @return the port
          */
         public Integer getPort() {
@@ -1563,7 +1884,6 @@ public class ShenyuConfig {
     
         /**
          * Gets jmx config.
-         *
          * @return the jmx config
          */
         public String getJmxConfig() {
@@ -1572,7 +1892,6 @@ public class ShenyuConfig {
     
         /**
          * Sets jmx config.
-         *
          * @param jmxConfig the jmx config
          */
         public void setJmxConfig(final String jmxConfig) {
@@ -1581,7 +1900,6 @@ public class ShenyuConfig {
     
         /**
          * Gets props.
-         *
          * @return the props
          */
         public Properties getProps() {
@@ -1590,11 +1908,133 @@ public class ShenyuConfig {
     
         /**
          * Sets props.
-         *
          * @param props the props
          */
         public void setProps(final Properties props) {
             this.props = props;
+        }
+    }
+
+    /**
+     * shenyu trie config.
+     */
+    public static class ShenyuTrieConfig {
+        
+        private Boolean enabled = Boolean.FALSE;
+        
+        private Long cacheSize = 512L;
+
+        /**
+         * match mode.
+         * @see TrieMatchModeEnum
+         */
+        private String matchMode = TrieMatchModeEnum.ANT_PATH_MATCH.getMatchMode();
+    
+        /**
+         * get match enabled.
+         * @return Boolean
+         */
+        public Boolean getEnabled() {
+            return enabled;
+        }
+    
+        /**
+         * set match enabled.
+         * @param enabled enabled
+         */
+        public void setEnabled(final Boolean enabled) {
+            this.enabled = enabled;
+        }
+    
+        /**
+         * get cache size.
+         * @return cache size
+         */
+        public Long getCacheSize() {
+            return cacheSize;
+        }
+
+        /**
+         * set cache size.
+         * @param cacheSize cache size
+         */
+        public void setCacheSize(final Long cacheSize) {
+            this.cacheSize = cacheSize;
+        }
+    
+        /**
+         * get match mode.
+         * @return match mode
+         */
+        public String getMatchMode() {
+            return matchMode;
+        }
+
+        /**
+         * set match mode.
+         * @param matchMode match mode
+         */
+        public void setMatchMode(final String matchMode) {
+            this.matchMode = matchMode;
+        }
+    }
+    
+    public static class SpringCloudCacheConfig {
+        private Boolean enabled = Boolean.FALSE;
+        
+        /**
+         * get shenyu spring cloud cache status.
+         * @return the enabled status
+         */
+        public Boolean getEnabled() {
+            return enabled;
+        }
+        
+        /**
+         * set shenyu spring cloud cache status.
+         * @param enabled the status
+         */
+        public void setEnabled(final Boolean enabled) {
+            this.enabled = enabled;
+        }
+    }
+    
+    public static class AlertConfig {
+        private Boolean enabled = Boolean.FALSE;
+        
+        private String admins = "localhost:9095";
+        
+        /**
+         * get shenyu spring cloud cache status.
+         * @return the enabled status
+         */
+        public Boolean getEnabled() {
+            return enabled;
+        }
+        
+        /**
+         * set shenyu spring cloud cache status.
+         * @param enabled the status
+         */
+        public void setEnabled(final Boolean enabled) {
+            this.enabled = enabled;
+        }
+        
+        /**
+         * Get shenyu admin alert report urls.
+         * eg: localhost:9095,localhost:9093
+         * @return admin alert report server list
+         */
+        public String getAdmins() {
+            return admins;
+        }
+        
+        /**
+         * Set shenyu admin alert report url.
+         * @param admins admin url
+         */
+        public void setAdmins(final String admins) {
+            this.admins = admins;
         }
     }
 }

@@ -20,8 +20,10 @@ package org.apache.shenyu.admin.service;
 import org.apache.shenyu.admin.model.dto.AppAuthDTO;
 import org.apache.shenyu.admin.model.dto.AuthApplyDTO;
 import org.apache.shenyu.admin.model.dto.AuthPathWarpDTO;
+import org.apache.shenyu.admin.model.entity.AppAuthDO;
 import org.apache.shenyu.admin.model.page.CommonPager;
 import org.apache.shenyu.admin.model.query.AppAuthQuery;
+import org.apache.shenyu.admin.model.result.ConfigImportResult;
 import org.apache.shenyu.admin.model.result.ShenyuAdminResult;
 import org.apache.shenyu.admin.model.vo.AppAuthVO;
 import org.apache.shenyu.admin.model.vo.AuthPathVO;
@@ -95,6 +97,16 @@ public interface AppAuthService extends PageService<AppAuthQuery, AppAuthVO> {
      */
     String enabled(List<String> ids, Boolean enabled);
 
+
+    /**
+     * Opened string.
+     *
+     * @param ids     the ids
+     * @param enabled the enable
+     * @return the string
+     */
+    String opened(List<String> ids, Boolean enabled);
+
     /**
      * find application authority by id.
      *
@@ -128,6 +140,21 @@ public interface AppAuthService extends PageService<AppAuthQuery, AppAuthVO> {
     List<AppAuthData> listAll();
 
     /**
+     * List all vo list.
+     *
+     * @return the vo list
+     */
+    List<AppAuthVO> listAllData();
+
+    /**
+     * List all vo list.
+     *
+     * @param namespace the namespace
+     * @return the vo list
+     */
+    List<AppAuthVO> listAllDataByNamespace(String namespace);
+
+    /**
      * Update app secret by app key shenyu result.
      *
      * @param appKey    the app key
@@ -136,6 +163,14 @@ public interface AppAuthService extends PageService<AppAuthQuery, AppAuthVO> {
      */
     ShenyuAdminResult updateAppSecretByAppKey(String appKey, String appSecret);
 
+    /**
+     * Find by app key app auth do.
+     *
+     * @param appKey the app key
+     * @return the app auth do
+     */
+    AppAuthDO findByAppKey(String appKey);
+
 
     /**
      * Sync data shenyu result.
@@ -143,5 +178,32 @@ public interface AppAuthService extends PageService<AppAuthQuery, AppAuthVO> {
      * @return the shenyu result
      */
     ShenyuAdminResult syncData();
+
+    /**
+     * Sync data by namespaceId shenyu result.
+     *
+     * @param namespaceId the namespaceId
+     * @return the shenyu result
+     */
+    ShenyuAdminResult syncDataByNamespaceId(String namespaceId);
+
+
+    /**
+     * Import shenyu auth data.
+     *
+     * @param authDataList app auth list
+     * @return the config import result
+     */
+    ConfigImportResult importData(List<AppAuthDTO> authDataList);
+
+
+    /**
+     * Import shenyu auth data.
+     *
+     * @param namespace     the namespace
+     * @param authDataList app auth list
+     * @return the config import result
+     */
+    ConfigImportResult importData(String namespace, List<AppAuthDTO> authDataList);
 
 }

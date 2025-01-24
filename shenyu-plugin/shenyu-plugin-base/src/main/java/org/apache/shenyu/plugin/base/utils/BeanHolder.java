@@ -17,6 +17,7 @@
 
 package org.apache.shenyu.plugin.base.utils;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -41,7 +42,7 @@ public class BeanHolder<O> implements Supplier<O> {
      */
     @Override
     public O get() {
-        if (o != null) {
+        if (Objects.nonNull(o)) {
             return o;
         }
         return init();
@@ -53,7 +54,7 @@ public class BeanHolder<O> implements Supplier<O> {
      * @return boolean
      */
     public boolean isNull() {
-        return o == null;
+        return Objects.isNull(o);
     }
 
     /**
@@ -62,7 +63,7 @@ public class BeanHolder<O> implements Supplier<O> {
      * @return bean
      */
     synchronized O init() {
-        if (o != null) {
+        if (Objects.nonNull(o)) {
             return o;
         }
         O res = supplier.get();

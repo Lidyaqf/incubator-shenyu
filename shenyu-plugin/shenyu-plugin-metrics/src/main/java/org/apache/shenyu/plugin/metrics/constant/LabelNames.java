@@ -5,7 +5,7 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,4 +41,34 @@ public final class LabelNames {
      * The constant EXECUTE_LATENCY_NAME.
      */
     public static final String EXECUTE_LATENCY_NAME = "shenyu_execute_latency_millis";
+
+    /**
+     * The constant RATELIMITER_REQUEST_RESTRICT_TOTAL.
+     */
+    public static final String RATELIMITER_REQUEST_RESTRICT_TOTAL = "shenyu_ratelimiter_request_restrict_total";
+
+    /**
+     * The constant SENTINEL_REQUEST_RESTRICT_TOTAL.
+     */
+    public static final String SENTINEL_REQUEST_RESTRICT_TOTAL = "shenyu_sentinel_request_restrict_total";
+
+    /**
+     * The constant SENTINEL_REQUEST_CIRCUITBREAKER_TOTAL.
+     */
+    public static final String SENTINEL_REQUEST_CIRCUITBREAKER_TOTAL = "shenyu_sentinel_request_circuitbreaker_total";
+
+    /**
+     * The constant RESILIENCE4J_REQUEST_RESTRICT_TOTAL.
+     */
+    public static final String RESILIENCE4J_REQUEST_RESTRICT_TOTAL = "shenyu_resilience4j_request_restrict_total";
+
+    /**
+     * The constant RESILIENCE4J_REQUEST_CIRCUITBREAKER_TOTAL.
+     */
+    public static final String RESILIENCE4J_REQUEST_CIRCUITBREAKER_TOTAL = "shenyu_resilience4j_request_circuitbreaker_total";
+
+    /**
+     * The constant HYSTRIX_REQUEST_CIRCUITBREAKER_TOTAL.
+     */
+    public static final String HYSTRIX_REQUEST_CIRCUITBREAKER_TOTAL = "shenyu_hystrix_request_circuitbreaker_total";
 }
