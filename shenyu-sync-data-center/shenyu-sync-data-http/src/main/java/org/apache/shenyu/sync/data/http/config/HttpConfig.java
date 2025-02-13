@@ -17,14 +17,11 @@
 
 package org.apache.shenyu.sync.data.http.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Objects;
 
 /**
  * The type Http config.
  */
-@ConfigurationProperties(prefix = "shenyu.sync.http")
 public class HttpConfig {
 
     private String url;
@@ -40,6 +37,42 @@ public class HttpConfig {
     private String username;
 
     private String password;
+
+    private String aesSecretKey;
+
+    private String aesSecretIv;
+
+    /**
+     * get aesSecretKey.
+     * @return  aesSecretKey
+     */
+    public String getAesSecretKey() {
+        return aesSecretKey;
+    }
+
+    /**
+     * set aesSecretKey.
+     * @param aesSecretKey aesSecretKey
+     */
+    public void setAesSecretKey(final String aesSecretKey) {
+        this.aesSecretKey = aesSecretKey;
+    }
+
+    /**
+     * get  aesSecretIv.
+     * @return aesSecretIv
+     */
+    public String getAesSecretIv() {
+        return aesSecretIv;
+    }
+
+    /**
+     * set aesSecretIv.
+     * @param aesSecretIv aesSecretIv
+     */
+    public void setAesSecretIv(final String aesSecretIv) {
+        this.aesSecretIv = aesSecretIv;
+    }
 
     /**
      * get username.
@@ -172,7 +205,7 @@ public class HttpConfig {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (Objects.isNull(o) || getClass() != o.getClass()) {
             return false;
         }
         HttpConfig that = (HttpConfig) o;

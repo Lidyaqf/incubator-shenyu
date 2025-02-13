@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.SelectorDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class SelectorChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code PluginChangedEvent}.operator is unknown.
      *
-     * @param source Current plugin state
-     * @param before Before the change plugiin state
-     * @param type   event type
+     * @param source   Current plugin state
+     * @param before   Before the change plugiin state
+     * @param type     event type
+     * @param operator operator
      */
     public SelectorChangedEvent(final SelectorDO source, final SelectorDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -45,9 +47,9 @@ public class SelectorChangedEvent extends AdminDataModelChangedEvent {
     public String buildContext() {
         final SelectorDO after = (SelectorDO) getAfter();
         if (Objects.isNull(getBefore())) {
-            return String.format("the selector [%s] is %s", after.getName(), StringUtils.lowerCase(getType().getType().toString()));
+            return String.format("the namespace [%s] selector [%s] is %s", after.getNamespaceId(), after.getName(), StringUtils.lowerCase(getType().getType().toString()));
         }
-        return String.format("the selector [%s] is %s : %s", after.getName(), StringUtils.lowerCase(getType().getType().toString()), contrast());
+        return String.format("the namespace [%s] selector [%s] is %s : %s", after.getNamespaceId(), after.getName(), StringUtils.lowerCase(getType().getType().toString()), contrast());
         
     }
     
@@ -78,11 +80,14 @@ public class SelectorChangedEvent extends AdminDataModelChangedEvent {
         if (!Objects.equals(before.getLoged(), after.getLoged())) {
             builder.append(String.format("loged[%s => %s] ", before.getLoged(), after.getLoged()));
         }
+        if (!Objects.equals(before.getNamespaceId(), after.getNamespaceId())) {
+            builder.append(String.format("namespaceId[%s => %s] ", before.getNamespaceId(), after.getNamespaceId()));
+        }
         return builder.toString();
     }
     
     @Override
     public String eventName() {
-        return "selector";
+        return Constants.EVENT_NAME_SELECTOR;
     }
 }

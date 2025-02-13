@@ -23,7 +23,7 @@ import java.util.Objects;
  * this is common upstream.
  */
 public class CommonUpstream {
-    
+
     /**
      * this is http protocol.
      */
@@ -38,24 +38,34 @@ public class CommonUpstream {
      * url.
      */
     private String upstreamUrl;
-    
+
     /**
      * false close/ true open.
      */
     private boolean status = true;
-    
+
     /**
      * startup time.
      */
     private long timestamp;
-    
+
+    /**
+     * namespaceId.
+     */
+    private String namespaceId;
+
+    /**
+     * this is gray.
+     */
+    private boolean gray;
+
     /**
      * Instantiates a new Common upstream.
      */
     public CommonUpstream() {
-        
+
     }
-    
+
     /**
      * Instantiates a new Common upstream.
      *
@@ -63,14 +73,16 @@ public class CommonUpstream {
      * @param upstreamHost the upstream host
      * @param upstreamUrl the upstream url
      * @param status the upstream status
+     * @param timestamp the upstream timestamp
      */
-    public CommonUpstream(final String protocol, final String upstreamHost, final String upstreamUrl, final boolean status) {
+    public CommonUpstream(final String protocol, final String upstreamHost, final String upstreamUrl, final boolean status, final long timestamp) {
         this.protocol = protocol;
         this.upstreamHost = upstreamHost;
         this.upstreamUrl = upstreamUrl;
         this.status = status;
+        this.timestamp = timestamp;
     }
-    
+
     /**
      * get upstreamHost.
      *
@@ -79,7 +91,7 @@ public class CommonUpstream {
     public String getUpstreamHost() {
         return upstreamHost;
     }
-    
+
     /**
      * set upstreamHost.
      *
@@ -88,7 +100,7 @@ public class CommonUpstream {
     public void setUpstreamHost(final String upstreamHost) {
         this.upstreamHost = upstreamHost;
     }
-    
+
     /**
      * get protocol.
      *
@@ -97,7 +109,7 @@ public class CommonUpstream {
     public String getProtocol() {
         return protocol;
     }
-    
+
     /**
      * set protocol.
      *
@@ -106,7 +118,7 @@ public class CommonUpstream {
     public void setProtocol(final String protocol) {
         this.protocol = protocol;
     }
-    
+
     /**
      * get upstreamUrl.
      *
@@ -115,7 +127,7 @@ public class CommonUpstream {
     public String getUpstreamUrl() {
         return upstreamUrl;
     }
-    
+
     /**
      * set upstreamUrl.
      *
@@ -124,7 +136,7 @@ public class CommonUpstream {
     public void setUpstreamUrl(final String upstreamUrl) {
         this.upstreamUrl = upstreamUrl;
     }
-    
+
     /**
      * get status.
      *
@@ -133,7 +145,7 @@ public class CommonUpstream {
     public boolean isStatus() {
         return status;
     }
-    
+
     /**
      * set status.
      *
@@ -142,7 +154,7 @@ public class CommonUpstream {
     public void setStatus(final boolean status) {
         this.status = status;
     }
-    
+
     /**
      * get timestamp.
      *
@@ -151,7 +163,7 @@ public class CommonUpstream {
     public long getTimestamp() {
         return timestamp;
     }
-    
+
     /**
      * set timestamp.
      *
@@ -160,7 +172,7 @@ public class CommonUpstream {
     public void setTimestamp(final long timestamp) {
         this.timestamp = timestamp;
     }
-    
+
     /**
      * Default status boolean.
      *
@@ -170,21 +182,61 @@ public class CommonUpstream {
         return true;
     }
 
+    /**
+     * get namespaceId.
+     *
+     * @return namespaceId
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    /**
+     * gray.
+     *
+     * @return Gray
+     */
+    public boolean isGray() {
+        return gray;
+    }
+
+    /**
+     * set gray.
+     *
+     * @param gray gray
+     */
+    public void setGray(final boolean gray) {
+        this.gray = gray;
+    }
+
+    /**
+     * set namespaceId.
+     *
+     * @param namespaceId namespaceId
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (Objects.isNull(o) || getClass() != o.getClass()) {
             return false;
         }
         CommonUpstream that = (CommonUpstream) o;
-        return Objects.equals(upstreamHost, that.upstreamHost) && Objects.equals(protocol, that.protocol) && Objects.equals(upstreamUrl, that.upstreamUrl);
+        return Objects.equals(upstreamHost, that.upstreamHost)
+                && Objects.equals(protocol, that.protocol)
+                && Objects.equals(gray, that.gray)
+                && Objects.equals(upstreamUrl, that.upstreamUrl)
+                && Objects.equals(namespaceId, that.namespaceId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(upstreamHost, protocol, upstreamUrl);
+        return Objects.hash(upstreamHost, protocol, upstreamUrl, namespaceId, gray);
     }
 
     @Override
@@ -203,6 +255,10 @@ public class CommonUpstream {
                 + status
                 + ", timestamp="
                 + timestamp
+                + ", namespaceId="
+                + namespaceId
+                + ", gray="
+                + gray
                 + '}';
     }
 }

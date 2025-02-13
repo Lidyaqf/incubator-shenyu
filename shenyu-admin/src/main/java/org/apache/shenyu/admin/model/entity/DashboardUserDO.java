@@ -19,6 +19,7 @@ package org.apache.shenyu.admin.model.entity;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.dto.DashboardUserDTO;
+import org.apache.shenyu.admin.model.dto.DashboardUserModifyPasswordDTO;
 import org.apache.shenyu.common.utils.UUIDUtils;
 
 import java.sql.Timestamp;
@@ -52,6 +53,11 @@ public final class DashboardUserDO extends BaseDO {
      * whether enabled.
      */
     private Boolean enabled;
+
+    /**
+     * clientId.
+     */
+    private String clientId;
 
     /**
      * current role list.
@@ -133,6 +139,24 @@ public final class DashboardUserDO extends BaseDO {
     }
 
     /**
+     * Gets the value of clientId.
+     *
+     * @return the value of clientId
+     */
+    public String getClientId() {
+        return clientId;
+    }
+
+    /**
+     * Sets the clientId.
+     *
+     * @param clientId clientId
+     */
+    public void setClientId(final String clientId) {
+        this.clientId = clientId;
+    }
+
+    /**
      * Sets the enabled.
      *
      * @param enabled enabled
@@ -171,6 +195,23 @@ public final class DashboardUserDO extends BaseDO {
     /**
      * build dashboardUserDO.
      *
+     * @param dashboardUserModifyPasswordDTO {@linkplain DashboardUserModifyPasswordDTO}
+     * @return {@linkplain DashboardUserDO}
+     */
+    public static DashboardUserDO buildDashboardUserDO(final DashboardUserModifyPasswordDTO dashboardUserModifyPasswordDTO) {
+        return Optional.ofNullable(dashboardUserModifyPasswordDTO).map(item -> {
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            return DashboardUserDO.builder()
+                    .password(item.getPassword())
+                    .dateUpdated(currentTime)
+                    .id(item.getId())
+                    .build();
+        }).orElse(null);
+    }
+
+    /**
+     * build dashboardUserDO.
+     *
      * @param dashboardUserDTO {@linkplain DashboardUserDTO}
      * @return {@linkplain DashboardUserDO}
      */
@@ -178,12 +219,12 @@ public final class DashboardUserDO extends BaseDO {
         return Optional.ofNullable(dashboardUserDTO).map(item -> {
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
             DashboardUserDO dashboardUserDO = DashboardUserDO.builder()
-                    .userName(item.getUserName())
-                    .password(item.getPassword())
-                    .role(item.getRole())
-                    .roles(item.getRoles())
-                    .dateUpdated(currentTime)
-                    .build();
+                .userName(item.getUserName())
+                .password(item.getPassword())
+                .role(item.getRole())
+                .roles(item.getRoles())
+                .dateUpdated(currentTime)
+                .build();
             if (StringUtils.isEmpty(item.getId())) {
                 dashboardUserDO.setId(UUIDUtils.getInstance().generateShortUuid());
                 dashboardUserDO.setEnabled(true);
@@ -235,6 +276,8 @@ public final class DashboardUserDO extends BaseDO {
         private Integer role;
 
         private Boolean enabled;
+
+        private String clientId;
 
         private List<String> roles;
 
@@ -319,6 +362,17 @@ public final class DashboardUserDO extends BaseDO {
         }
 
         /**
+         * clientId.
+         *
+         * @param clientId the clientId.
+         * @return DashboardUserDOBuilder.
+         */
+        public DashboardUserDOBuilder clientId(final String clientId) {
+            this.clientId = clientId;
+            return this;
+        }
+
+        /**
          * roles.
          *
          * @param roles the roles.
@@ -342,6 +396,7 @@ public final class DashboardUserDO extends BaseDO {
             dashboardUserDO.setUserName(userName);
             dashboardUserDO.setPassword(password);
             dashboardUserDO.setRole(role);
+            dashboardUserDO.setClientId(clientId);
             dashboardUserDO.setEnabled(enabled);
             dashboardUserDO.setRoles(roles);
             return dashboardUserDO;

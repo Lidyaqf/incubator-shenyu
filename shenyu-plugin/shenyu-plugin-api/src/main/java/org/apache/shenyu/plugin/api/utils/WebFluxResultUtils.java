@@ -18,12 +18,12 @@
 package org.apache.shenyu.plugin.api.utils;
 
 import org.apache.shenyu.common.utils.ObjectTypeUtils;
+import org.apache.shenyu.plugin.api.exception.ResponsiveException;
 import org.apache.shenyu.plugin.api.result.ShenyuResult;
 import org.apache.shenyu.plugin.api.result.ShenyuResultEnum;
 import org.apache.shenyu.plugin.api.result.ShenyuResultWrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -48,7 +48,7 @@ public final class WebFluxResultUtils {
      * Response result.
      *
      * @param exchange the exchange
-     * @param result    the result
+     * @param result   the result
      * @return the result
      */
     public static Mono<Void> result(final ServerWebExchange exchange, final Object result) {
@@ -63,28 +63,13 @@ public final class WebFluxResultUtils {
             mediaType = shenyuResult.contentType(exchange, resultData);
         }
         exchange.getResponse().getHeaders().setContentType(mediaType);
-
         final Object responseData = shenyuResult.result(exchange, resultData);
-        assert null != responseData;
+        assert Objects.nonNull(responseData);
         final byte[] bytes = (responseData instanceof byte[])
-            ? (byte[]) responseData : responseData.toString().getBytes(StandardCharsets.UTF_8);
+                ? (byte[]) responseData : responseData.toString().getBytes(StandardCharsets.UTF_8);
         return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
-            .bufferFactory().wrap(bytes))
-            .doOnNext(data -> exchange.getResponse().getHeaders().setContentLength(data.readableByteCount())));
-    }
-
-    /**
-     * Response result and support specify the http status code .
-     *
-     * @param exchange   the exchange
-     * @param result     the result
-     * @param httpStatus the http status
-     * @return the result
-     */
-    public static Mono<Void> resultCustomStatusCode(final ServerWebExchange exchange, final Object result, final HttpStatus httpStatus) {
-        exchange.getResponse().setStatusCode(httpStatus);
-        return result(exchange, result);
-
+                .bufferFactory().wrap(bytes))
+                .doOnNext(data -> exchange.getResponse().getHeaders().setContentLength(data.readableByteCount())));
     }
 
     /**
@@ -95,7 +80,7 @@ public final class WebFluxResultUtils {
      * @return the mono
      */
     public static Mono<Void> noSelectorResult(final String pluginName, final ServerWebExchange exchange) {
-        LOG.error("can not match selector data: {}", pluginName);
+        LOG.error("can not match selector data: {} , path is {}", pluginName, exchange.getRequest().getURI().getRawPath());
         Object error = ShenyuResultWrap.error(exchange, ShenyuResultEnum.SELECTOR_NOT_FOUND.getCode(), pluginName + ":" + ShenyuResultEnum.SELECTOR_NOT_FOUND.getMsg(), null);
         return WebFluxResultUtils.result(exchange, error);
     }
@@ -108,8 +93,34 @@ public final class WebFluxResultUtils {
      * @return the mono
      */
     public static Mono<Void> noRuleResult(final String pluginName, final ServerWebExchange exchange) {
-        LOG.error("can not match rule data: {}", pluginName);
+        LOG.error("can not match rule data: {} , path is {}", pluginName, exchange.getRequest().getURI().getRawPath());
         Object error = ShenyuResultWrap.error(exchange, ShenyuResultEnum.RULE_NOT_FOUND.getCode(), pluginName + ":" + ShenyuResultEnum.RULE_NOT_FOUND.getMsg(), null);
         return WebFluxResultUtils.result(exchange, error);
     }
+
+    /**
+     * get failed result.
+     *
+     * @param responsiveException responsiveException
+     * @return the mono.
+     */
+    public static Mono<Void> failedResult(final ResponsiveException responsiveException) {
+        return failedResult(responsiveException.getCode(),
+                responsiveException.getMessage(),
+                responsiveException.getWebExchange());
+    }
+
+    /**
+     * get failed result.
+     *
+     * @param code     code
+     * @param reason   reason
+     * @param exchange exchange
+     * @return the mono.
+     */
+    public static Mono<Void> failedResult(final int code, final String reason, final ServerWebExchange exchange) {
+        Object error = ShenyuResultWrap.error(exchange, code, reason, null);
+        return WebFluxResultUtils.result(exchange, error);
+    }
+
 }

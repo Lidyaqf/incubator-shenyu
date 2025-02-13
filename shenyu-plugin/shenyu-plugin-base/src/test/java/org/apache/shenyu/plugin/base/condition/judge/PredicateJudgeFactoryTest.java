@@ -2,15 +2,15 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License,  Version 2.0
+ * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,  software
+ * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,  either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -78,6 +78,16 @@ public final class PredicateJudgeFactoryTest {
     }
 
     @Test
+    public void testPathPatternJudge() {
+        conditionData.setOperator(OperatorEnum.PATH_PATTERN.getAlias());
+        conditionData.setParamValue("/http/**");
+        assertTrue(PredicateJudgeFactory.judge(conditionData, "/http/**"));
+        assertTrue(PredicateJudgeFactory.judge(conditionData, "/http/test"));
+        assertTrue(PredicateJudgeFactory.judge(conditionData, "/http/test/test"));
+        assertFalse(PredicateJudgeFactory.judge(conditionData, "/http1/**"));
+    }
+
+    @Test
     public void testRegexJudge() {
         conditionData.setOperator(OperatorEnum.REGEX.getAlias());
         conditionData.setParamValue("[/a-zA-Z0-9]+");
@@ -140,4 +150,11 @@ public final class PredicateJudgeFactoryTest {
         assertFalse(PredicateJudgeFactory.judge(conditionData, "/**/http1/"));
     }
 
+    @Test
+    public void testIsBlankJudge() {
+        conditionData.setOperator(OperatorEnum.IS_BLANK.getAlias());
+        assertTrue(PredicateJudgeFactory.judge(conditionData, null));
+        assertTrue(PredicateJudgeFactory.judge(conditionData, ""));
+        assertFalse(PredicateJudgeFactory.judge(conditionData, "test"));
+    }
 }

@@ -25,6 +25,7 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.ExtensionRegistryLite;
 import io.grpc.MethodDescriptor;
 import org.apache.shenyu.common.utils.GsonUtils;
+import org.apache.shenyu.common.utils.ParamCheckUtils;
 import org.apache.shenyu.protocol.grpc.constant.GrpcConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * JsonMessage.
@@ -83,6 +85,7 @@ public class JsonMessage {
      * @return DynamicMessageList
      */
     public static List<DynamicMessage> buildJsonMessageList(final Map<String, Object> jsonParamMap) {
+        ParamCheckUtils.checkParamsLength(jsonParamMap.size(), GrpcConstants.JSON_DESCRIPTOR_PROTO_FIELD_NUM);
         JsonArray jsonParams = (JsonArray) jsonParamMap.get(GrpcConstants.JSON_DESCRIPTOR_PROTO_FIELD_NAME);
         List<DynamicMessage> jsonMessageList = new ArrayList<>(jsonParams.size());
         jsonParams.forEach(jsonParam -> {
@@ -154,7 +157,7 @@ public class JsonMessage {
                                                                                                         final DynamicMessage request,
                                                                                                         final DynamicMessage response) {
         MethodDescriptor<DynamicMessage, DynamicMessage> methodDescriptor = METHOD_DESCRIPTOR_CACHE.get(serviceName + GrpcConstants.GRPC_JSON_SERVICE + methodName);
-        if (methodDescriptor == null) {
+        if (Objects.isNull(methodDescriptor)) {
             methodDescriptor = MethodDescriptor.<DynamicMessage, DynamicMessage>newBuilder()
                     .setType(getMethodType(methodType))
                     .setFullMethodName(MethodDescriptor.generateFullMethodName(serviceName + GrpcConstants.GRPC_JSON_SERVICE, methodName))
@@ -192,7 +195,7 @@ public class JsonMessage {
             default:
                 grpcMethodType = MethodDescriptor.MethodType.UNKNOWN;
         }
-
+        
         return grpcMethodType;
     }
 

@@ -21,7 +21,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URL;
 import java.security.CodeSource;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * VersionUtils.
@@ -68,12 +74,12 @@ public final class VersionUtils {
         // guess version for jar file name if nothing's found from MANIFEST.MF
         CodeSource codeSource = cls.getProtectionDomain().getCodeSource();
 
-        if (codeSource == null) {
+        if (Objects.isNull(codeSource)) {
             LOG.info("No codeSource for class {} when getVersion, use default version {}", cls.getName(), defaultVersion);
             return defaultVersion;
         }
         String file = codeSource.getLocation().getFile();
-        if (file != null && file.endsWith(JAR)) {
+        if (Objects.nonNull(file) && file.endsWith(JAR)) {
             file = file.substring(0, file.length() - 4);
             int i = file.lastIndexOf('/');
             if (i >= 0) {
@@ -83,7 +89,7 @@ public final class VersionUtils {
             if (i >= 0) {
                 file = file.substring(i + 1);
             }
-            while (file.length() > 0 && !Character.isDigit(file.charAt(0))) {
+            while (StringUtils.isNoneBlank(file) && !Character.isDigit(file.charAt(0))) {
                 i = file.indexOf("-");
                 if (i < 0) {
                     break;
@@ -94,6 +100,46 @@ public final class VersionUtils {
         }
         // return default version if no version info is found
         return StringUtils.isBlank(version) ? defaultVersion : version;
+    }
+
+    /**
+     * checkDuplicate,this method refers to the design of dubbo .
+     * @param cls cls
+     */
+    public static void checkDuplicate(final Class<?> cls) {
+        try {
+            String path = cls.getName().replace('.', '/') + ".class";
+            Set<String> files = readResources(path, cls);
+            // duplicated jar is found
+            if (files.size() > 1) {
+                String error = "Duplicate class " + path + " in " + files.size() + " jar " + files;
+                LOG.error("checkDuplicate error,{}", error);
+            }
+        } catch (Throwable e) {
+            LOG.error("checkDuplicate error,msg :{}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * readResources.
+     * @param path path
+     * @param cls cls
+     * @return set
+     * @throws IOException ioexception
+     */
+    private static Set<String> readResources(final String path, final Class<?> cls) throws IOException {
+        Enumeration<URL> urls = cls.getClassLoader().getResources(path);
+        Set<String> files = new HashSet<>();
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            if (Objects.nonNull(url)) {
+                String file = url.getFile();
+                if (StringUtils.isNotEmpty(file)) {
+                    files.add(file);
+                }
+            }
+        }
+        return files;
     }
 }
 

@@ -65,7 +65,7 @@ public final class PluginHandleControllerTest {
 
     @Mock
     private PluginHandleService pluginHandleService;
-    
+
     @Mock
     private PluginHandleMapper handleMapper;
 
@@ -76,7 +76,7 @@ public final class PluginHandleControllerTest {
     @BeforeEach
     public void setUp() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(pluginHandleController)
-                .setControllerAdvice(new ExceptionHandlers())
+                .setControllerAdvice(new ExceptionHandlers(null))
                 .build();
     }
 
@@ -84,7 +84,9 @@ public final class PluginHandleControllerTest {
     public void testQueryPluginHandles() throws Exception {
         given(this.pluginHandleService.listByPage(new PluginHandleQuery("2", null, null, new PageParameter(1, 1))))
                 .willReturn(new CommonPager<>());
-        this.mockMvc.perform(MockMvcRequestBuilders.get("/plugin-handle/", "1", 1, 1))
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/plugin-handle")
+                        .param("currentPage", "1")
+                        .param("pageSize", "1"))
                 .andExpect(status().isOk())
                 .andReturn();
     }
@@ -115,10 +117,12 @@ public final class PluginHandleControllerTest {
         pluginHandleDTO.setPluginId("1213");
         pluginHandleDTO.setDataType(1);
         pluginHandleDTO.setField("f");
+        pluginHandleDTO.setType(1);
+        pluginHandleDTO.setSort(1);
         given(this.pluginHandleService.createOrUpdate(pluginHandleDTO)).willReturn(1);
         this.mockMvc.perform(MockMvcRequestBuilders.post("/plugin-handle/")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(GsonUtils.getInstance().toJson(pluginHandleDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GsonUtils.getInstance().toJson(pluginHandleDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(ShenyuResultMessage.CREATE_SUCCESS)))
                 .andReturn();
@@ -131,13 +135,15 @@ public final class PluginHandleControllerTest {
         pluginHandleDTO.setPluginId("1213");
         pluginHandleDTO.setDataType(1);
         pluginHandleDTO.setField("f");
+        pluginHandleDTO.setType(1);
+        pluginHandleDTO.setSort(1);
         SpringBeanUtils.getInstance().setApplicationContext(mock(ConfigurableApplicationContext.class));
         when(SpringBeanUtils.getInstance().getBean(PluginHandleMapper.class)).thenReturn(handleMapper);
         when(handleMapper.existed(pluginHandleDTO.getId())).thenReturn(true);
         given(this.pluginHandleService.createOrUpdate(pluginHandleDTO)).willReturn(1);
         this.mockMvc.perform(MockMvcRequestBuilders.put("/plugin-handle/{id}", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(GsonUtils.getInstance().toJson(pluginHandleDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GsonUtils.getInstance().toJson(pluginHandleDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(ShenyuResultMessage.UPDATE_SUCCESS)))
                 .andReturn();
@@ -147,8 +153,8 @@ public final class PluginHandleControllerTest {
     public void testDeletePluginHandles() throws Exception {
         given(this.pluginHandleService.deletePluginHandles(Collections.singletonList("1"))).willReturn(1);
         this.mockMvc.perform(MockMvcRequestBuilders.delete("/plugin-handle/batch", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(GsonUtils.getInstance().toJson(Collections.singletonList("1"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GsonUtils.getInstance().toJson(Collections.singletonList("1"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(ShenyuResultMessage.DELETE_SUCCESS)))
                 .andReturn();

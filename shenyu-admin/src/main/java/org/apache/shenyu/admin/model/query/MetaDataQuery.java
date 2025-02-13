@@ -30,39 +30,45 @@ public class MetaDataQuery implements Serializable {
     private static final long serialVersionUID = -8342574521635216117L;
 
     /**
-     * application key.
+     * path parameter.
      */
-    private String appName;
+    private String path;
 
     /**
      * page parameter.
      */
     private PageParameter pageParameter;
 
+    /**
+     * namespace id.
+     */
+    private String namespaceId;
+
     public MetaDataQuery() {
     }
 
-    public MetaDataQuery(final String appName, final PageParameter pageParameter) {
-        this.appName = appName;
+    public MetaDataQuery(final String path, final PageParameter pageParameter, final String namespaceId) {
+        this.path = path;
         this.pageParameter = pageParameter;
+        this.namespaceId = namespaceId;
     }
 
     /**
-     * Gets the value of appName.
+     * Gets the value of path.
      *
-     * @return the value of appName
+     * @return the value of path
      */
-    public String getAppName() {
-        return appName;
+    public String getPath() {
+        return path;
     }
 
     /**
-     * Sets the appName.
+     * Sets the path.
      *
-     * @param appName appName
+     * @param path path
      */
-    public void setAppName(final String appName) {
-        this.appName = appName;
+    public void setPath(final String path) {
+        this.path = path;
     }
 
     /**
@@ -83,6 +89,24 @@ public class MetaDataQuery implements Serializable {
         this.pageParameter = pageParameter;
     }
 
+    /**
+     * Gets the value of name.
+     *
+     * @return the value of name
+     */
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    /**
+     * Sets the namespaceId.
+     *
+     * @param namespaceId namespaceId
+     */
+    public void setNamespaceId(final String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -92,11 +116,12 @@ public class MetaDataQuery implements Serializable {
             return false;
         }
         MetaDataQuery that = (MetaDataQuery) o;
-        return Objects.equals(appName, that.appName) && Objects.equals(pageParameter, that.pageParameter);
+        return Objects.equals(path, that.path) && Objects.equals(pageParameter, that.pageParameter)
+                && Objects.equals(namespaceId, that.namespaceId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, pageParameter);
+        return Objects.hash(path, pageParameter, namespaceId);
     }
 }

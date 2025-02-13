@@ -19,75 +19,44 @@ package org.apache.shenyu.plugin.logging.rocketmq;
 
 import org.apache.shenyu.common.dto.RuleData;
 import org.apache.shenyu.common.dto.SelectorData;
-import org.apache.shenyu.plugin.api.ShenyuPluginChain;
-import org.apache.shenyu.plugin.base.AbstractShenyuPlugin;
-import org.apache.shenyu.plugin.base.utils.HostAddressUtils;
-import org.apache.shenyu.plugin.logging.rocketmq.body.LoggingServerHttpRequest;
-import org.apache.shenyu.plugin.logging.rocketmq.body.LoggingServerHttpResponse;
-import org.apache.shenyu.plugin.logging.rocketmq.entity.ShenyuRequestLog;
-import org.apache.shenyu.plugin.logging.rocketmq.utils.LogCollectConfigUtils;
-import org.apache.shenyu.plugin.logging.rocketmq.utils.LogCollectUtils;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.apache.shenyu.common.enums.PluginEnum;
+import org.apache.shenyu.plugin.logging.common.AbstractLoggingPlugin;
+import org.apache.shenyu.plugin.logging.common.collector.LogCollector;
+import org.apache.shenyu.plugin.logging.common.entity.ShenyuRequestLog;
+import org.apache.shenyu.plugin.logging.rocketmq.collector.RocketMQLogCollector;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
-
-import static org.apache.shenyu.common.enums.PluginEnum.LOGGING_ROCKETMQ;
 
 /**
  * Integrated rocketmq collect log.
  */
-public class LoggingRocketMQPlugin extends AbstractShenyuPlugin {
-
-    private static final String USER_AGENT = "User-Agent";
-
-    private static final String HOST = "Host";
+public class LoggingRocketMQPlugin extends AbstractLoggingPlugin<ShenyuRequestLog> {
 
     @Override
-    protected Mono<Void> doExecute(final ServerWebExchange exchange, final ShenyuPluginChain chain,
-                                   final SelectorData selector, final RuleData rule) {
-        ServerHttpRequest request = exchange.getRequest();
-        // control sampling
-        if (!LogCollectConfigUtils.isSampled(exchange.getRequest())) {
-            return chain.execute(exchange);
-        }
-
-        ShenyuRequestLog requestInfo = new ShenyuRequestLog();
-        requestInfo.setRequestUri(request.getURI().toString());
-        requestInfo.setMethod(request.getMethodValue());
-        requestInfo.setRequestHeader(LogCollectUtils.getHeaders(request.getHeaders()));
-        requestInfo.setQueryParams(request.getURI().getQuery());
-        requestInfo.setClientIp(HostAddressUtils.acquireIp(exchange));
-        requestInfo.setUserAgent(request.getHeaders().getFirst(USER_AGENT));
-        requestInfo.setHost(request.getHeaders().getFirst(HOST));
-        requestInfo.setPath(request.getURI().getPath());
-
-        LoggingServerHttpRequest loggingServerHttpRequest = new LoggingServerHttpRequest(request, requestInfo);
-        LoggingServerHttpResponse loggingServerHttpResponse = new LoggingServerHttpResponse(exchange.getResponse(),
-                requestInfo, DefaultLogCollector.getInstance());
-        ServerWebExchange webExchange = exchange.mutate().request(loggingServerHttpRequest)
-                .response(loggingServerHttpResponse).build();
-        loggingServerHttpResponse.setExchange(webExchange);
-
-        return chain.execute(webExchange).doOnError(loggingServerHttpResponse::logError);
+    protected LogCollector<ShenyuRequestLog> logCollector() {
+        return RocketMQLogCollector.getInstance();
     }
 
     /**
-     * get plugin order.
+     * pluginEnum.
      *
-     * @return order
+     * @return plugin
      */
     @Override
-    public int getOrder() {
-        return LOGGING_ROCKETMQ.getCode();
+    public PluginEnum pluginEnum() {
+        return PluginEnum.LOGGING_ROCKETMQ;
     }
 
     /**
-     * get plugin name.
+     * log collect extension.
+     * base on ShenyuRequestLog to extend log
      *
-     * @return plugin name
+     * @param exchange exchange
+     * @param selector selector
+     * @param rule     rule
+     * @return base ShenyuRequestLog
      */
     @Override
-    public String named() {
-        return LOGGING_ROCKETMQ.getName();
+    protected ShenyuRequestLog doLogExecute(final ServerWebExchange exchange, final SelectorData selector, final RuleData rule) {
+        return new ShenyuRequestLog();
     }
 }

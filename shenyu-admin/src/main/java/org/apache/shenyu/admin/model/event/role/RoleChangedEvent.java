@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.entity.RoleDO;
 import org.apache.shenyu.admin.model.enums.EventTypeEnum;
 import org.apache.shenyu.admin.model.event.AdminDataModelChangedEvent;
+import org.apache.shenyu.common.constant.Constants;
 
 import java.util.Objects;
 
@@ -33,9 +34,10 @@ public class RoleChangedEvent extends AdminDataModelChangedEvent {
     /**
      * Create a new {@code RoleChangedEvent}.operator is unknown.
      *
-     * @param source Current role state
-     * @param before Before the change role state
-     * @param type   event type
+     * @param source   Current role state
+     * @param before   Before the change role state
+     * @param type     event type
+     * @param operator operator
      */
     public RoleChangedEvent(final RoleDO source, final RoleDO before, final EventTypeEnum type, final String operator) {
         super(source, before, type, operator);
@@ -71,6 +73,6 @@ public class RoleChangedEvent extends AdminDataModelChangedEvent {
     
     @Override
     public String eventName() {
-        return "role";
+        return Constants.EVENT_NAME_ROLE;
     }
 }

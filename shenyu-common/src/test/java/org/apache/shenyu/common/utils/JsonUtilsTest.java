@@ -65,7 +65,7 @@ public final class JsonUtilsTest {
                 .nullObject(null)
                 .emptyList(new LinkedList<>())
                 .emptyMap(new HashMap<>())
-                .nestedMap(new HashMap<String, Object>() {
+                .nestedMap(new HashMap<>() {
                     {
                         put("map1", testMap);
                         put("map2", new HashMap<>());
@@ -75,13 +75,18 @@ public final class JsonUtilsTest {
                     }
                 })
                 .build();
-        JsonParser parser = new JsonParser();
-        JsonElement expectedJson = parser.parse(EXPECTED_JSON);
-        JsonElement objectJson = parser.parse(JsonUtils.toJson(object));
+        JsonElement expectedJson = JsonParser.parseString(EXPECTED_JSON);
+        JsonElement objectJson = JsonParser.parseString(JsonUtils.toJson(object));
         assertEquals(expectedJson, objectJson);
 
         Object o = new Object();
         assertEquals(Constants.EMPTY_JSON, JsonUtils.toJson(o));
+    }
+
+    @Test
+    public void testJsonToMap() {
+        Map<String, Object> stringObjectMap = JsonUtils.jsonToMap(EXPECTED_JSON);
+        assertEquals(stringObjectMap.get("name"), "test object");
     }
 
     @Test
@@ -101,6 +106,27 @@ public final class JsonUtilsTest {
         JsonUtils.removeClass(testMap);
         assertNotNull(testMap.getOrDefault("result", null));
         assertEquals(testMap.get("result").get("not_class"), "ClassNotFoundException.class");
+    }
+
+    @Test
+    public void testJsonToObject() {
+        TestObject testObject = JsonUtils.jsonToObject(EXPECTED_JSON, TestObject.class);
+        assertNotNull(testObject);
+        assertEquals(testObject.getName(), "test object");
+    }
+
+    @Test
+    public void testJsonToMapByValueTypeRef() {
+        Map<String, Object> stringObjectMap = JsonUtils.jsonToMap(EXPECTED_JSON, Object.class);
+        assertEquals(stringObjectMap.get("name"), "test object");
+    }
+
+    @Test
+    public void testToMap() {
+        TestObject testObject = JsonUtils.jsonToObject(EXPECTED_JSON, TestObject.class);
+        Map<String, Object> testObjectMap = JsonUtils.toMap(testObject);
+        assertNotNull(testObjectMap);
+        assertEquals(testObjectMap.get("name"), "test object");
     }
 
     static class TestObject {
@@ -322,7 +348,7 @@ public final class JsonUtilsTest {
             if (this == o) {
                 return true;
             }
-            if (o == null || getClass() != o.getClass()) {
+            if (Objects.isNull(o) || getClass() != o.getClass()) {
                 return false;
             }
             TestObject that = (TestObject) o;

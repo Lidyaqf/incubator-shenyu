@@ -24,6 +24,7 @@ import java.net.URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Test cases for UriUtils.
@@ -40,6 +41,9 @@ public final class UriUtilsTest {
 
         uri = UriUtils.createUri("");
         assertNull(uri);
+
+        uri = UriUtils.createUri("https", "example.com", "/http");
+        assertEquals("https://example.com/http", uri.toString());
     }
 
     @Test
@@ -81,5 +85,22 @@ public final class UriUtilsTest {
         assertNotNull(uri);
         ret = UriUtils.getPathWithParams(uri);
         assertEquals("/path?key=val", ret);
+    }
+
+    @Test
+    void appendScheme() {
+        String uri = UriUtils.appendScheme("example.com", "http");
+        assertEquals("http://example.com", uri);
+
+        uri = UriUtils.appendScheme("example.com", "https");
+        assertEquals("https://example.com", uri);
+
+        uri = UriUtils.appendScheme("https://example.com", "http");
+        assertEquals("https://example.com", uri);
+        assertNotEquals("http://example.com", uri);
+
+        uri = UriUtils.appendScheme("http://example.com", "https");
+        assertEquals("http://example.com", uri);
+        assertNotEquals("https://example.com", uri);
     }
 }

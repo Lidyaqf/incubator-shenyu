@@ -36,6 +36,7 @@ shenyu:
   sync:
     websocket:
       urls: ws://shenyu-admin:9095/websocket
+      allowOrigin: ws://localhost:9195
   exclude:
     enabled: true
     paths:
@@ -53,4 +54,8 @@ logging:
     org.apache.shenyu.bonuspoint: info
     org.apache.shenyu.lottery: info
     org.apache.shenyu: info
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.ipc.netty: DEBUG
+    reactor.netty: DEBUG
 

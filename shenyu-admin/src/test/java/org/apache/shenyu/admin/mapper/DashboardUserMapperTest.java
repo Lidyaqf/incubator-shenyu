@@ -21,11 +21,11 @@ import org.apache.shenyu.admin.AbstractSpringIntegrationTest;
 import org.apache.shenyu.admin.model.entity.DashboardUserDO;
 import org.apache.shenyu.admin.model.page.PageParameter;
 import org.apache.shenyu.admin.model.query.DashboardUserQuery;
-import org.apache.shenyu.common.utils.ShaUtils;
+import org.apache.shenyu.common.utils.DigestUtils;
 import org.apache.shenyu.common.utils.UUIDUtils;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -165,7 +165,7 @@ public final class DashboardUserMapperTest extends AbstractSpringIntegrationTest
         return DashboardUserDO.builder()
                 .id(UUIDUtils.getInstance().generateShortUuid())
                 .userName("adminTest")
-                .password(ShaUtils.shaEncryption("123456"))
+                .password(DigestUtils.sha512Hex("123456"))
                 .enabled(true)
                 .role(1)
                 .dateCreated(now)

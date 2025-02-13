@@ -17,10 +17,17 @@
 
 package org.apache.shenyu.plugin.response.strategy;
 
+import com.google.common.collect.Lists;
 import org.apache.shenyu.common.constant.Constants;
+import org.apache.shenyu.common.enums.RpcTypeEnum;
 import org.apache.shenyu.plugin.api.ShenyuPluginChain;
+import org.apache.shenyu.plugin.api.result.ShenyuResultEnum;
+import org.apache.shenyu.plugin.api.result.ShenyuResultWrap;
+import org.apache.shenyu.plugin.api.utils.WebFluxResultUtils;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.Nullable;
@@ -32,6 +39,8 @@ import reactor.netty.Connection;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * The type Netty client message writer.
@@ -50,7 +59,8 @@ public class NettyClientMessageWriter implements MessageWriter {
         return chain.execute(exchange).doOnError(throwable -> cleanup(exchange)).then(Mono.defer(() -> {
             Connection connection = exchange.getAttribute(Constants.CLIENT_RESPONSE_CONN_ATTR);
             if (Objects.isNull(connection)) {
-                return Mono.empty();
+                Object error = ShenyuResultWrap.error(exchange, ShenyuResultEnum.SERVICE_RESULT_ERROR);
+                return WebFluxResultUtils.result(exchange, error);
             }
             ServerHttpResponse response = exchange.getResponse();
             NettyDataBufferFactory factory = (NettyDataBufferFactory) response.bufferFactory();
@@ -60,17 +70,32 @@ public class NettyClientMessageWriter implements MessageWriter {
                     .retain()
                     .map(factory::wrap);
             MediaType contentType = response.getHeaders().getContentType();
-            return isStreamingMediaType(contentType)
+
+            Mono<Void> responseMono = isStreamingMediaType(contentType)
                     ? response.writeAndFlushWith(body.map(Flux::just))
                     : response.writeWith(body);
+            exchange.getAttributes().put(Constants.RESPONSE_MONO, responseMono);
+            // watcher httpStatus
+            final Consumer<HttpStatusCode> consumer = exchange.getAttribute(Constants.WATCHER_HTTP_STATUS);
+            Optional.ofNullable(consumer).ifPresent(c -> c.accept(response.getStatusCode()));
+            return responseMono.onErrorResume(error -> releaseIfNotConsumed(body, error));
         })).doOnCancel(() -> cleanup(exchange));
     }
-
+    
+    @Override
+    public List<String> supportTypes() {
+        return Lists.newArrayList(RpcTypeEnum.HTTP.getName(), RpcTypeEnum.SPRING_CLOUD.getName(), RpcTypeEnum.WEB_SOCKET.getName());
+    }
+    
     private void cleanup(final ServerWebExchange exchange) {
         Connection connection = exchange.getAttribute(Constants.CLIENT_RESPONSE_CONN_ATTR);
         if (Objects.nonNull(connection)) {
             connection.dispose();
         }
+    }
+
+    private static <T> Mono<T> releaseIfNotConsumed(final Flux<NettyDataBuffer> dataBufferDody, final Throwable ex) {
+        return Objects.nonNull(dataBufferDody) ? dataBufferDody.map(DataBufferUtils::release).then(Mono.error(ex)) : Mono.error(ex);
     }
 
     private boolean isStreamingMediaType(@Nullable final MediaType contentType) {

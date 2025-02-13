@@ -17,10 +17,10 @@
 
 package org.apache.shenyu.admin.model.page;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * page condition.
@@ -47,6 +47,15 @@ public class PageCondition<T> {
     @Valid
     @NotNull
     private T condition;
+    
+    public PageCondition() {
+    }
+    
+    public PageCondition(final Integer pageNum, final Integer pageSize, final T condition) {
+        this.pageNum = pageNum;
+        this.pageSize = pageSize;
+        this.condition = condition;
+    }
     
     /**
      * get page num.

@@ -17,9 +17,9 @@
 
 package org.apache.shenyu.admin.model.entity;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.admin.model.dto.RoleDTO;
 import org.apache.shenyu.common.utils.UUIDUtils;
-import reactor.util.StringUtils;
 
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -124,7 +124,7 @@ public final class RoleDO extends BaseDO {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (Objects.isNull(o) || getClass() != o.getClass()) {
             return false;
         }
         if (!super.equals(o)) {

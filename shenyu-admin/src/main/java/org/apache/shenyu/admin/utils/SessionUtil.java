@@ -18,6 +18,7 @@
 package org.apache.shenyu.admin.utils;
 
 import org.apache.shenyu.admin.model.custom.UserInfo;
+import org.apache.shenyu.common.constant.AdminConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,15 @@ public final class SessionUtil {
      *
      * @return default is unknown
      */
+    public static String visitorId() {
+        return visitor().getUserId();
+    }
+    
+    /**
+     * visitor is login user[admin or other] / app /bootstrap.
+     *
+     * @return default is unknown
+     */
     public static UserInfo visitor() {
         try {
             final UserInfo userInfo = LOCAL_VISITOR.get();
@@ -62,7 +72,7 @@ public final class SessionUtil {
         } catch (Exception e) {
             LOG.warn("get user info error ,not found, used default user ,it unknown");
         }
-        return UserInfo.builder().userId("-1").userName("unknown").build();
+        return defaultUser();
     }
     
     /**
@@ -79,7 +89,8 @@ public final class SessionUtil {
      */
     public static void setLocalVisitorFromAuth() {
         // featureToDo:Adapting app access
-        LOCAL_VISITOR.set(JwtUtils.getUserInfo());
+        final UserInfo userInfo = JwtUtils.getUserInfo();
+        LOCAL_VISITOR.set(Objects.isNull(userInfo) ? defaultUser() : userInfo);
     }
     
     /**
@@ -87,6 +98,19 @@ public final class SessionUtil {
      */
     public static void clean() {
         LOCAL_VISITOR.remove();
+    }
+    
+    /**
+     * current user is admin.
+     *
+     * @return boolean
+     */
+    public static boolean isAdmin() {
+        return AdminConstants.ADMIN_NAME.equals(visitorName());
+    }
+    
+    private static UserInfo defaultUser() {
+        return UserInfo.builder().userId("-1").userName("unknown").build();
     }
 }
 

@@ -26,6 +26,7 @@ import org.apache.shenyu.plugin.api.ShenyuPluginChain;
 import org.apache.shenyu.plugin.api.context.ShenyuContext;
 import org.apache.shenyu.plugin.base.cache.BaseDataCache;
 import org.apache.shenyu.plugin.base.cache.PluginHandlerEvent;
+import org.apache.shenyu.web.loader.ShenyuLoaderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,9 +37,11 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +58,9 @@ public final class ShenyuWebHandlerTest {
 
     @Mock
     private ShenyuWebHandler shenyuWebHandler;
-    
+
+    private ShenyuLoaderService shenyuLoaderService;
+
     private final List<ShenyuPlugin> listPlugins = new ArrayList<>();
 
     private final ShenyuPlugin plugin1 = new TestPlugin1();
@@ -66,7 +71,8 @@ public final class ShenyuWebHandlerTest {
     public void setUp() {
         listPlugins.add(plugin1);
         listPlugins.add(plugin2);
-        shenyuWebHandler = new ShenyuWebHandler(listPlugins, new ShenyuConfig());
+        shenyuLoaderService = mock(ShenyuLoaderService.class);
+        shenyuWebHandler = new ShenyuWebHandler(listPlugins, shenyuLoaderService, new ShenyuConfig());
     }
 
     @Test
@@ -77,7 +83,31 @@ public final class ShenyuWebHandlerTest {
         exchange.getAttributes().put(Constants.CONTEXT, mock(ShenyuContext.class));
         exchange.getAttributes().put(Constants.PARAM_TRANSFORM, "{key:value}");
         Mono<Void> handle = shenyuWebHandler.handle(exchange);
+        StepVerifier.create(handle).expectSubscription().verifyComplete();
+
+    }
+
+    @Test
+    public void putExtPlugins() {
+        shenyuWebHandler.putExtPlugins(Collections.emptyList());
+        shenyuWebHandler.putExtPlugins(Collections.singletonList(new TestPlugin2()));
+        shenyuWebHandler.putExtPlugins(Collections.singletonList(new TestPlugin3()));
+    }
+
+    @Test
+    public void scheduledEnableTest() {
+        final ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("localhost")
+                .remoteAddress(new InetSocketAddress(8090))
+                .build());
+        ShenyuConfig shenyuConfig = new ShenyuConfig();
+        shenyuConfig.getScheduler().setEnabled(true);
+        ShenyuWebHandler shenyuWebHandler1 = new ShenyuWebHandler(listPlugins, shenyuLoaderService, shenyuConfig);
+        Mono<Void> handle = shenyuWebHandler1.handle(exchange);
         assertNotNull(handle);
+        shenyuConfig.getScheduler().setType("elastic");
+        ShenyuWebHandler shenyuWebHandler2 = new ShenyuWebHandler(listPlugins, shenyuLoaderService, shenyuConfig);
+        Mono<Void> handle2 = shenyuWebHandler2.handle(exchange);
+        assertNotNull(handle2);
     }
 
     @Test
@@ -118,6 +148,9 @@ public final class ShenyuWebHandlerTest {
         assertNotNull(pluginDataSorted);
         assertEquals(pluginDataSorted.get(0), plugin2);
         assertEquals(pluginDataSorted.get(1), plugin1);
+
+        shenyuWebHandler.onApplicationEvent(new PluginHandlerEvent(PluginHandlerEventEnum.SORTED, pluginData1));
+        assertEquals(pluginDataSorted.get(0), plugin2);
     }
 
     static class TestPlugin1 implements ShenyuPlugin {
@@ -158,6 +191,29 @@ public final class ShenyuWebHandlerTest {
         @Override
         public String named() {
             return "test-plugin2";
+        }
+
+        @Override
+        public boolean skip(final ServerWebExchange exchange) {
+            return true;
+        }
+    }
+
+    static class TestPlugin3 implements ShenyuPlugin {
+
+        @Override
+        public Mono<Void> execute(final ServerWebExchange exchange, final ShenyuPluginChain chain) {
+            return chain.execute(exchange);
+        }
+
+        @Override
+        public int getOrder() {
+            return 3;
+        }
+
+        @Override
+        public String named() {
+            return "test-plugin3";
         }
 
         @Override

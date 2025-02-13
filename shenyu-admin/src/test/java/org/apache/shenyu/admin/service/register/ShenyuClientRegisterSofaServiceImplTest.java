@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import com.google.gson.JsonParser;
     
 import java.util.ArrayList;
 import java.util.List;
@@ -67,14 +68,13 @@ public final class ShenyuClientRegisterSofaServiceImplTest {
     
     @Test
     public void testRuleHandler() {
-        assertEquals("{\"retries\":0,\"loadBalance\":\"random\",\"timeout\":3000}",
-                shenyuClientRegisterSofaService.ruleHandler());
+        assertEquals(JsonParser.parseString("{\"retries\":0,\"loadBalance\":\"random\",\"timeout\":3000}"), JsonParser.parseString(shenyuClientRegisterSofaService.ruleHandler()));
     }
     
     @Test
     public void testRegisterMetadata() {
         MetaDataDO metaDataDO = MetaDataDO.builder().build();
-        when(metaDataService.findByServiceNameAndMethodName(any(), any())).thenReturn(metaDataDO);
+        when(metaDataService.findByServiceNameAndMethodNameAndNamespaceId(any(), any(), any())).thenReturn(metaDataDO);
         MetaDataRegisterDTO metaDataDTO = MetaDataRegisterDTO.builder().build();
         shenyuClientRegisterSofaService.registerMetadata(metaDataDTO);
         verify(metaDataService).saveOrUpdateMetaData(metaDataDO, metaDataDTO);

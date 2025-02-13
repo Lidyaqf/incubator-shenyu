@@ -18,14 +18,17 @@
 package org.apache.shenyu.plugin.httpclient;
 
 import io.netty.handler.codec.http.HttpMethod;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shenyu.common.constant.Constants;
 import org.apache.shenyu.common.enums.PluginEnum;
+import org.apache.shenyu.common.enums.UniqueHeaderEnum;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
@@ -34,6 +37,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  * The type Netty http client plugin.
@@ -52,23 +56,33 @@ public class NettyHttpClientPlugin extends AbstractHttpClientPlugin<HttpClientRe
     }
 
     @Override
-    protected Mono<HttpClientResponse> doRequest(final ServerWebExchange exchange, final String httpMethod, final URI uri,
-                                final HttpHeaders httpHeaders, final Flux<DataBuffer> body) {
-        return Mono.from(httpClient.headers(headers -> httpHeaders.forEach(headers::add))
-                .request(HttpMethod.valueOf(httpMethod)).uri(uri.toASCIIString())
+    protected Mono<HttpClientResponse> doRequest(final ServerWebExchange exchange, final String httpMethod,
+                                                 final URI uri, final Flux<DataBuffer> body) {
+        ServerHttpRequest request = exchange.getRequest();
+        final HttpHeaders httpHeaders = new HttpHeaders(request.getHeaders());
+        this.duplicateHeaders(exchange, httpHeaders, UniqueHeaderEnum.REQ_UNIQUE_HEADER);
+        return Mono.from(httpClient.headers(headers -> {
+            httpHeaders.forEach(headers::set);
+            headers.remove(HttpHeaders.HOST);
+            Boolean preserveHost = exchange.getAttributeOrDefault(Constants.PRESERVE_HOST, Boolean.FALSE);
+            if (preserveHost) {
+                headers.add(HttpHeaders.HOST, request.getHeaders().getFirst(HttpHeaders.HOST));
+            }
+        }).request(HttpMethod.valueOf(httpMethod)).uri(uri.toASCIIString())
                 .send((req, nettyOutbound) -> nettyOutbound.send(body.map(dataBuffer -> ((NettyDataBuffer) dataBuffer).getNativeBuffer())))
                 .responseConnection((res, connection) -> {
                     exchange.getAttributes().put(Constants.CLIENT_RESPONSE_ATTR, res);
                     exchange.getAttributes().put(Constants.CLIENT_RESPONSE_CONN_ATTR, connection);
-                    ServerHttpResponse response = exchange.getResponse();
+                    final ServerHttpResponse response = exchange.getResponse();
                     HttpHeaders headers = new HttpHeaders();
                     res.responseHeaders().forEach(entry -> headers.add(entry.getKey(), entry.getValue()));
+                    this.duplicateHeaders(exchange, httpHeaders, UniqueHeaderEnum.RESP_UNIQUE_HEADER);
                     String contentTypeValue = headers.getFirst(HttpHeaders.CONTENT_TYPE);
                     if (StringUtils.isNotBlank(contentTypeValue)) {
                         exchange.getAttributes().put(Constants.ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR, contentTypeValue);
                     }
                     HttpStatus status = HttpStatus.resolve(res.status().code());
-                    if (status != null) {
+                    if (Objects.nonNull(status)) {
                         response.setStatusCode(status);
                     } else if (response instanceof AbstractServerHttpResponse) {
                         response.setRawStatusCode(res.status().code());
@@ -79,6 +93,7 @@ public class NettyHttpClientPlugin extends AbstractHttpClientPlugin<HttpClientRe
                     return Mono.just(res);
                 }));
     }
+
 
     @Override
     public int getOrder() {

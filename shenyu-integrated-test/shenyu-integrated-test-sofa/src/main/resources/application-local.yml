@@ -36,6 +36,7 @@ shenyu:
   sync:
     websocket:
       urls: ws://shenyu-admin:9095/websocket
+      allowOrigin: ws://localhost:9195
   exclude:
     enabled: true
     paths:
@@ -49,10 +50,10 @@ shenyu:
 
 logging:
   level:
-    root: info
-    org.springframework.boot: info
-    org.apache.ibatis: info
-    org.apache.shenyu.bonuspoint: info
-    org.apache.shenyu.lottery: info
-    org.apache.shenyu: info
+    root: debug
+#    org.springframework.boot: info
+#    org.apache.ibatis: info
+#    org.apache.shenyu.bonuspoint: info
+#    org.apache.shenyu.lottery: info
+#    org.apache.shenyu: info
 

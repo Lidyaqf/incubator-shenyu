@@ -18,6 +18,7 @@
 package org.apache.shenyu.admin.service;
 
 import org.apache.shenyu.admin.model.dto.DashboardUserDTO;
+import org.apache.shenyu.admin.model.dto.DashboardUserModifyPasswordDTO;
 import org.apache.shenyu.admin.model.page.CommonPager;
 import org.apache.shenyu.admin.model.query.DashboardUserQuery;
 import org.apache.shenyu.admin.model.vo.DashboardUserEditVO;
@@ -38,7 +39,7 @@ public interface DashboardUserService {
      * @return rows
      */
     int createOrUpdate(DashboardUserDTO dashboardUserDTO);
-    
+
     /**
      * create dashboard user.
      *
@@ -46,9 +47,9 @@ public interface DashboardUserService {
      * @return rows
      */
     int create(DashboardUserDTO dashboardUserDTO);
-    
+
     /**
-     *  update dashboard user.
+     * update dashboard user.
      *
      * @param dashboardUserDTO {@linkplain DashboardUserDTO}
      * @return rows
@@ -101,7 +102,24 @@ public interface DashboardUserService {
      *
      * @param userName default username is admin
      * @param password admin password
+     * @param clientId client id
      * @return {@linkplain LoginDashboardUserVO}
      */
-    LoginDashboardUserVO login(String userName, String password);
+    LoginDashboardUserVO login(String userName, String password, String clientId);
+
+    /**
+     * modify password.
+     *
+     * @param dashboardUserModifyPasswordDTO {@linkplain DashboardUserModifyPasswordDTO}
+     * @return rows
+     */
+    int modifyPassword(DashboardUserModifyPasswordDTO dashboardUserModifyPasswordDTO);
+
+    /**
+     * check password.
+     *
+     * @param userId userId
+     * @return Passed or not
+     */
+    boolean checkUserPassword(String userId);
 }
